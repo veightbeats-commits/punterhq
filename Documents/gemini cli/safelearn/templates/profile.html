@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - SafeLearn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #030712;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(147, 51, 234, 0.1) 0%, transparent 50%);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #030712;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+
+<body class="text-white min-h-screen">
+    <div id="root"></div>
+
+    <script>
+        // Pass backend session data to the frontend
+        const session = JSON.parse('{{ session | tojson | safe }}');
+    </script>
+
+    <script>
+        const e = React.createElement;
+        const { useState, useEffect } = React;
+
+        const LucideIcon = ({ name, className, size = 20 }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return e('i', {
+                'data-lucide': name,
+                className: `${className}`,
+                style: { width: size, height: size }
+            });
+        };
+
+        const SuggestionCard = ({ item, type }) => {
+            const config = {
+                accommodation: { icon: 'home', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'hover:border-purple-500/50' },
+                bursary: { icon: 'wallet', color: 'text-green-400', bg: 'bg-green-500/10', border: 'hover:border-green-500/50' },
+                learnership: { icon: 'award', color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'hover:border-yellow-500/50' },
+                path: { icon: 'graduation-cap', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'hover:border-indigo-500/50' }
+            };
+
+            const c = config[type] || config.path;
+            const title = item.title || item.accommodation_name || item.name;
+            const subtitle = item.company || item.city || item.provider || item.location;
+
+            return e('div', { className: `bg-gray-900/50 border border-gray-700/50 rounded-2xl p-5 group transition-all duration-300 ${c.border} hover:bg-gray-800/80` },
+                e('div', { className: 'flex gap-4' },
+                    e('div', { className: `p-3 rounded-xl ${c.bg} ${c.color} shrink-0` },
+                        e(LucideIcon, { name: c.icon, size: 24 })
+                    ),
+                    e('div', { className: 'flex-1 min-w-0' },
+                        e('h4', { className: 'font-bold text-white mb-1 truncate group-hover:text-white transition-colors' }, title),
+                        e('p', { className: 'text-sm text-gray-400 mb-3' }, subtitle),
+                        e('div', { className: 'flex flex-wrap gap-2' },
+                            item.nqf_level && e('span', { className: 'text-[10px] font-bold px-2 py-0.5 bg-gray-800 text-gray-400 rounded-md border border-gray-700 uppercase' }, `NQF ${item.nqf_level}`),
+                            item.stipend && e('span', { className: 'text-[10px] font-bold px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded-md border border-indigo-500/20 uppercase' }, `R${item.stipend}`),
+                            item.monthly_pay && e('span', { className: 'text-[10px] font-bold px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md border border-purple-500/20 uppercase' }, `R${item.monthly_pay}/mo`)
+                        )
+                    )
+                )
+            );
+        };
+
+        function ProfilePage() {
+            const user_id = session.user_id;
+            const username = session.username || 'User';
+            const userEmail = session.email || 'N/A';
+
+            const [userFavorites, setUserFavorites] = useState([]);
+            const [loadingFavorites, setLoadingFavorites] = useState(true);
+            const [userReviews, setUserReviews] = useState([]);
+            const [loadingReviews, setLoadingReviews] = useState(true);
+            const [mindResult, setMindResult] = useState(null);
+            const [loadingMind, setLoadingMind] = useState(true);
+            const [userMessages, setUserMessages] = useState([]);
+            const [loadingMessages, setLoadingMessages] = useState(true);
+            const [selectedMessage, setSelectedMessage] = useState(null);
+
+            useEffect(() => {
+                if (user_id) {
+                    fetch(`/api/users/${user_id}/favorites`)
+                        .then(res => res.json())
+                        .then(data => { setUserFavorites(data); setLoadingFavorites(false); })
+                        .catch(() => setLoadingFavorites(false));
+
+                    fetch(`/api/users/${user_id}/reviews`)
+                        .then(res => res.json())
+                        .then(data => { setUserReviews(data); setLoadingReviews(false); })
+                        .catch(() => setLoadingReviews(false));
+
+                    fetch(`/api/users/${user_id}/mind`)
+                        .then(res => res.ok ? res.json() : Promise.reject())
+                        .then(data => { setMindResult(data.result); setLoadingMind(false); })
+                        .catch(() => setLoadingMind(false));
+
+                    fetch('/api/user/messages')
+                        .then(res => res.json())
+                        .then(data => { setUserMessages(data); setLoadingMessages(false); })
+                        .catch(() => setLoadingMessages(false));
+                }
+            }, [user_id]);
+
+            const handleMessageClick = (message) => {
+                setSelectedMessage(message);
+                if (!message.is_read) {
+                    fetch(`/api/user/messages/${message.id}/read`, { method: 'PATCH' })
+                        .then(() => {
+                            setUserMessages(prev => prev.map(msg => 
+                                msg.id === message.id ? { ...msg, is_read: true } : msg
+                            ));
+                        });
+                }
+            };
+
+            const renderInterestBadges = () => {
+                const interests = mindResult?.input?.interests || [];
+                if (interests.length === 0) return e('p', { className: 'text-gray-500 text-sm italic' }, 'No interests selected yet.');
+
+                return e('div', { className: 'flex flex-wrap gap-2' },
+                    interests.map((interest, idx) => e('span', {
+                        key: idx,
+                        className: 'px-3 py-1.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-bold shadow-sm'
+                    }, interest))
+                );
+            };
+
+            return e('div', { className: 'min-h-screen pb-20 fade-in' },
+                // Navbar
+                e('nav', { className: 'border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-50' },
+                    e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center' },
+                        e('a', { href: '/', className: 'flex items-center gap-2' },
+                            e('div', { className: 'w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20' },
+                                e(LucideIcon, { name: 'shield-check', className: 'text-white', size: 24 })
+                            ),
+                            e('span', { className: 'text-2xl font-bold tracking-tight' }, 'Safe', e('span', { className: 'text-indigo-400' }, 'Learn'))
+                        ),
+                        e('div', { className: 'flex items-center gap-4' },
+                            e('a', { href: '/', className: 'text-sm font-medium text-gray-400 hover:text-white transition-colors' }, 'Home'),
+                            e('a', { href: '/api/logout', className: 'px-4 py-2 rounded-lg bg-gray-800 hover:bg-red-500/10 text-gray-300 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all font-medium text-sm' }, 'Logout')
+                        )
+                    )
+                ),
+
+                e('main', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10' },
+                    // Header Section
+                    e('div', { className: 'flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12' },
+                        e('div', null,
+                            e('h1', { className: 'text-4xl md:text-5xl font-extrabold mb-3 leading-tight' }, 'Welcome, ', e('span', { className: 'gradient-text' }, username)),
+                            e('p', { className: 'text-gray-400 text-lg max-w-2xl' }, 'Your personal dashboard for career planning, saved opportunities, and academic insights.')
+                        ),
+                        e('div', { className: 'flex gap-3' },
+                            e('div', { className: 'px-6 py-3 bg-gray-800/30 rounded-2xl border border-gray-700/50 flex flex-col backdrop-blur-sm shadow-sm' },
+                                e('span', { className: 'text-[10px] text-gray-500 font-bold uppercase tracking-wider' }, 'Member ID'),
+                                e('span', { className: 'font-mono text-indigo-400 font-bold' }, `#${user_id.toString().padStart(5, '0')}`)
+                            )
+                        )
+                    ),
+
+                    e('div', { className: 'grid grid-cols-1 lg:grid-cols-4 gap-8' },
+                        // Sidebar (User Info & Interests)
+                        e('div', { className: 'lg:col-span-1 space-y-8' },
+                            e('div', { className: 'glass-card rounded-3xl p-6 border border-gray-700/50 shadow-xl' },
+                                e('h2', { className: 'text-lg font-bold mb-6 flex items-center gap-2' }, e(LucideIcon, { name: 'user', className: 'text-indigo-400' }), 'About Me'),
+                                e('div', { className: 'space-y-6' },
+                                    e('div', null,
+                                        e('label', { className: 'text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block' }, 'Email Address'),
+                                        e('p', { className: 'text-sm text-gray-200 font-medium break-all' }, userEmail)
+                                    ),
+                                    e('div', null,
+                                        e('label', { className: 'text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 block' }, 'Special Interests'),
+                                        renderInterestBadges()
+                                    )
+                                )
+                            ),
+
+                            e('div', { className: 'glass-card rounded-3xl p-6 border border-gray-700/50 shadow-xl' },
+                                e('h2', { className: 'text-lg font-bold mb-6 flex items-center gap-2' }, e(LucideIcon, { name: 'heart', className: 'text-red-400' }), 'Saved items'),
+                                loadingFavorites ? e('p', { className: 'text-gray-500 text-sm' }, 'Loading...') :
+                                    userFavorites.length === 0 ? e('p', { className: 'text-gray-500 text-sm italic' }, 'No favorites yet.') :
+                                                                                 e('div', { className: 'space-y-3' },
+                                                                                    userFavorites.slice(0, 5).map(fav => e('div', { key: fav.id, className: 'flex items-center gap-3 p-3 bg-gray-900/30 rounded-xl border border-gray-800 shadow-sm text-sm' },
+                                                                                        e(LucideIcon, { name: 'bookmark', className: 'text-indigo-400', size: 14 }),
+                                                                                        e('span', { className: 'truncate text-gray-300 font-medium' }, fav.title || 'Saved Item')
+                                                                                    )),
+                                                                                    userFavorites.length > 5 && e('p', { className: 'text-[10px] text-gray-500 text-center uppercase font-bold mt-2' }, `+ ${userFavorites.length - 5} more`)
+                                                                                )
+                                                                    ),
+                                        
+                                                                    // Messages Inbox
+                                                                    e('div', { className: 'glass-card rounded-3xl p-6 border border-gray-700/50 shadow-xl' },
+                                                                        e('h2', { className: 'text-lg font-bold mb-6 flex items-center justify-between' },
+                                                                            e('span', { className: 'flex items-center gap-2' }, e(LucideIcon, { name: 'inbox', className: 'text-blue-400' }), 'Inbox'),
+                                                                            userMessages.filter(m => !m.is_read).length > 0 && e('span', { className: 'px-2 py-1 bg-blue-500 text-white rounded-full text-[10px] font-bold' }, userMessages.filter(m => !m.is_read).length)
+                                                                        ),
+                                                                        loadingMessages ? e('p', { className: 'text-gray-500 text-sm' }, 'Loading messages...') :
+                                                                            userMessages.length === 0 ? e('p', { className: 'text-gray-500 text-sm italic' }, 'No messages from admin.') :
+                                                                                                                         e('div', { className: 'space-y-2' },
+                                                                                                                            userMessages.slice(0, 4).map(msg => e('div', { 
+                                                                                                                                key: msg.id,
+                                                                                                                                onClick: () => handleMessageClick(msg),
+                                                                                                                                className: `p-3 rounded-xl border transition-all cursor-pointer ${msg.is_read ? 'bg-gray-900/30 border-gray-800' : 'bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20'}`
+                                                                                                                            },                                                                                        e('div', { className: 'flex justify-between items-center' },
+                                                                                            e('p', { className: `text-sm font-bold truncate ${msg.is_read ? 'text-gray-400' : 'text-blue-300'}` }, msg.subject),
+                                                                                            !msg.is_read && e('div', {className: 'w-2 h-2 rounded-full bg-blue-400'})
+                                                                                        ),
+                                                                                        e('p', { className: 'text-xs text-gray-500 truncate' }, msg.message)
+                                                                                    ))
+                                                                                )
+                                                                    )
+                                                                ),
+                        // Main Content
+                        e('div', { className: 'lg:col-span-3 space-y-10' },
+                            selectedMessage ? 
+                            e('div', { className: 'glass-card rounded-3xl p-6 md:p-10 border border-gray-700/50 shadow-xl' },
+                                e('button', { onClick: () => setSelectedMessage(null), className: 'flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-6' },
+                                    e(LucideIcon, { name: 'arrow-left', size: 16 }),
+                                    'Back to Profile'
+                                ),
+                                e('h2', { className: 'text-2xl font-bold mb-4' }, selectedMessage.subject),
+                                e('div', { className: 'flex items-center gap-4 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-800' },
+                                    e('span', null, e('strong', {className: 'text-gray-300'}, 'From: '), selectedMessage.sender_name),
+                                    e('span', null, e('strong', {className: 'text-gray-300'}, 'Date: '), new Date(selectedMessage.created_at).toLocaleString())
+                                ),
+                                e('div', { className: 'prose prose-invert max-w-none text-gray-300' },
+                                    e('p', {style: {whiteSpace: 'pre-wrap'}}, selectedMessage.message)
+                                )
+                            )
+                            :
+                            e(React.Fragment, null,
+                                // Recommendations & Career Path
+                                e('div', { className: 'bg-indigo-600/5 rounded-[2.5rem] p-6 md:p-10 border border-indigo-500/10 shadow-2xl relative overflow-hidden' },
+                                    e('div', { className: 'absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none' }),
+
+                                    e('div', { className: 'flex items-center justify-between mb-8 relative z-10' },
+                                        e('h2', { className: 'text-2xl font-bold flex items-center gap-3' },
+                                            e('div', { className: 'p-3 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/30' }, e(LucideIcon, { name: 'brain-circuit', className: 'text-white', size: 24 })),
+                                            'Personalized Path'
+                                        ),
+                                        mindResult && e('button', { className: 'text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 uppercase tracking-wider transition-colors' }, 'Update Plan', e(LucideIcon, { name: 'refresh-cw', size: 12 }))
+                                    ),
+
+                                    !loadingMind && !mindResult && e('div', { className: 'bg-gray-900/50 rounded-3xl p-12 text-center border-2 border-dashed border-gray-700 relative z-10' },
+                                        e('div', { className: 'w-20 h-20 bg-indigo-600/10 rounded-full flex items-center justify-center mx-auto mb-6' }, e(LucideIcon, { name: 'compass', className: 'text-indigo-400', size: 40 })),
+                                        e('h3', { className: 'text-xl font-bold text-white mb-2' }, 'Start Your Journey'),
+                                        e('p', { className: 'text-gray-400 mb-8 max-w-md mx-auto' }, 'Complete "The Mind" assessment to unlock personalized recommendations for your career.'),
+                                        e('a', { href: '/', className: 'inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-extrabold transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 group' },
+                                            'Launch Assessment',
+                                            e(LucideIcon, { name: 'arrow-right', className: 'group-hover:translate-x-1 transition-transform' })
+                                        )
+                                    ),
+
+                                    mindResult && e('div', { className: 'space-y-8 relative z-10' },
+                                        // Insight message
+                                        e('div', { className: 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 rounded-3xl p-8 shadow-inner' },
+                                            e('p', { className: 'text-xl md:text-2xl font-medium text-white mb-6 leading-relaxed italic' }, `"${mindResult.recommendations.insight_message}"`),
+                                            e('div', { className: 'flex flex-wrap gap-4' },
+                                                e('div', { className: 'flex items-center gap-3 bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-xl backdrop-blur-sm' },
+                                                    e(LucideIcon, { name: 'target', className: 'text-indigo-300' }),
+                                                    e('div', null,
+                                                        e('span', { className: 'text-[8px] uppercase font-bold text-indigo-300/60 block leading-none mb-1' }, 'My Goal'),
+                                                        e('span', { className: 'text-sm text-indigo-100 font-semibold uppercase' }, mindResult.input.goal)
+                                                    )
+                                                ),
+                                                e('div', { className: 'flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl backdrop-blur-sm' },
+                                                    e(LucideIcon, { name: 'map-pin', className: 'text-purple-300' }),
+                                                    e('div', null,
+                                                        e('span', { className: 'text-[8px] uppercase font-bold text-purple-300/60 block leading-none mb-1' }, 'My Location'),
+                                                        e('span', { className: 'text-sm text-purple-100 font-semibold uppercase' }, mindResult.input.location)
+                                                    )
+                                                )
+                                            )
+                                        ),
+
+                                        // Suggested Paths
+                                        e('div', null,
+                                            e('h3', { className: 'text-xs uppercase tracking-[0.2em] font-black text-gray-500 mb-4 px-2' }, 'Top Academy Recommendations'),
+                                            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                                                mindResult.recommendations.paths.map((path, i) => e(SuggestionCard, { key: i, item: path, type: 'path' }))
+                                            )
+                                        ),
+
+                                        // Other Suggestions (Accommodations, Bursaries, Learnerships)
+                                        e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-8 pt-6 border-t border-gray-800/50' },
+                                            ['accommodations', 'bursaries', 'learnerships'].map(cat => {
+                                                const items = mindResult.recommendations[cat] || [];
+                                                if (items.length === 0) return null;
+
+                                                const icons = { accommodations: 'home', bursaries: 'wallet', learnerships: 'award' };
+                                                const titles = { accommodations: 'Places to Stay', bursaries: 'Funding', learnerships: 'Work Exp' };
+                                                const colors = { accommodations: 'text-purple-400', bursaries: 'text-green-400', learnerships: 'text-yellow-400' };
+
+                                                return e('div', { key: cat, className: 'space-y-4' },
+                                                    e('h3', { className: 'text-xs uppercase tracking-[0.1em] font-black text-gray-500 px-2 flex items-center justify-between' },
+                                                        titles[cat],
+                                                        e(LucideIcon, { name: icons[cat], size: 12, className: colors[cat] })
+                                                    ),
+                                                    e('div', { className: 'space-y-3' },
+                                                        items.slice(0, 3).map((item, idx) => e('div', { key: idx, className: 'p-4 bg-gray-900/40 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-sm' },
+                                                            e('p', { className: 'text-sm font-bold text-gray-200 mb-1 truncate' }, item.accommodation_name || item.name || item.title),
+                                                            e('p', { className: 'text-[10px] text-gray-500 truncate font-medium' }, item.city || item.provider || item.company)
+                                                        ))
+                                                    )
+                                                );
+                                            })
+                                        )
+                                    )
+                                ),
+
+                                // Recent Reviews Section
+                                e('div', { className: 'space-y-6' },
+                                    e('h2', { className: 'text-2xl font-bold flex items-center gap-3 px-2 text-white' },
+                                        e('div', { className: 'p-2 bg-yellow-500/10 rounded-xl' }, e(LucideIcon, { name: 'message-square', className: 'text-yellow-400' })),
+                                        'My Activity'
+                                    ),
+                                    loadingReviews ? e('p', { className: 'text-gray-500 text-sm' }, 'Loading activity...') :
+                                        userReviews.length === 0 ? e('div', { className: 'bg-gray-800/20 border-2 border-dashed border-gray-700/50 rounded-3xl p-12 text-center text-gray-500 shadow-inner' }, 'No recent activity or reviews yet.') :
+                                            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                                                userReviews.map(review => e('div', { key: review.id, className: 'bg-gray-800/30 border border-gray-700/50 p-6 rounded-3xl backdrop-blur-sm' },
+                                                    e('div', { className: 'flex justify-between items-start mb-4' },
+                                                        e('div', { className: 'flex flex-col' },
+                                                            e('span', { className: 'text-[10px] uppercase font-black text-indigo-400 mb-2' }, review.item_type.replace('_', ' ')),
+                                                            e('div', { className: 'flex gap-0.5 text-yellow-500' },
+                                                                [...Array(5)].map((_, i) => e(LucideIcon, { key: i, name: 'star', size: 12, className: i < review.rating ? 'fill-current' : 'text-gray-700' }))
+                                                            )
+                                                        ),
+                                                        e('span', { className: 'text-[10px] text-gray-500 font-bold' }, new Date(review.created_at).toLocaleDateString())
+                                                    ),
+                                                    e('p', { className: 'text-sm text-gray-300 leading-relaxed italic' }, `"${review.comment}"`)
+                                                ))
+                                            )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        ReactDOM.render(e(ProfilePage), document.getElementById('root'));
+    </script>
+</body>
+
+</html>

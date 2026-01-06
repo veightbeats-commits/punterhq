@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLearner.online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* CustomScrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="root"></div>
+
+    <script>
+        // Pass backend session data to the frontend
+        const session = JSON.parse('{{ session | tojson | safe }}');
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+
+        const e = React.createElement;
+        const { useState, useEffect } = React;
+
+        const renderTextWithLinks = (text) => {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const parts = text.split(urlRegex);
+            return parts.map((part, index) => {
+                if (part.match(urlRegex)) {
+                    return e('a', { key: index, href: part, target: '_blank', rel: 'noopener noreferrer', className: 'text-indigo-400 hover:underline' }, part);
+                }
+                return part;
+            });
+        };
+
+        const Hero = () => {
+            return e('div', {
+                className: 'relative bg-gray-900 py-32 px-6 sm:py-40 sm:px-12 lg:px-16 border-b border-gray-800',
+                style: {
+                    backgroundImage: 'url(/static/hero-bg.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }
+            },
+                e('div', { className: 'absolute inset-0 bg-gray-900/70' }),
+                e('div', { className: 'absolute inset-0 overflow-hidden' },
+                    e('div', { className: 'absolute -top-40 -right-40 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob' }),
+                    e('div', { className: 'absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000' })
+                ),
+                e('div', { className: 'relative z-10 text-center' },
+                    e('h1', { className: 'text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl mb-6' },
+                        'Stay Informed, ', e('span', { className: 'gradient-text' }, 'Stay Ahead')
+                    ),
+                    e('p', { className: 'mt-6 max-w-2xl mx-auto text-xl text-gray-400' }, 'Your premium source for the latest news, updates, and insights in the South African education and skills development sector.')
+                )
+            );
+        };
+
+        const TabButton = ({ label, icon, activeTab, setActiveTab, tabName, isMobile, setIsMenuOpen }) => {
+            const isActive = activeTab === tabName;
+            const baseClasses = 'inline-flex items-center gap-2 whitespace-nowrap py-4 px-4 font-medium text-sm transition-all duration-200 rounded-lg mx-1';
+            const mobileClasses = 'block w-full text-left';
+            const desktopClasses = '';
+            const activeClasses = 'bg-gray-800 text-white shadow-lg shadow-indigo-500/10 border border-gray-700';
+            const inactiveClasses = 'text-gray-400 hover:text-white hover:bg-gray-800/50';
+
+            return e('button', {
+                onClick: () => {
+                    setActiveTab(tabName);
+                    if (isMobile && setIsMenuOpen) {
+                        setIsMenuOpen(false);
+                    }
+                },
+                className: `${baseClasses} ${isMobile ? mobileClasses : desktopClasses} ${isActive ? activeClasses : inactiveClasses}`
+            }, e('i', { 'data-lucide': icon, className: `w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-gray-500'}` }), label);
+        };
+
+        const SearchTab = ({ searchQuery, setSearchQuery }) => {
+            return e('div', null,
+                e('div', { className: 'relative' },
+                    e('i', { 'data-lucide': 'search', className: 'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500' }),
+                    e('input', {
+                        type: 'text',
+                        placeholder: 'Search for qualifications, skills programmes, or schools by name or ID...',
+                        value: searchQuery,
+                        onChange: (e) => setSearchQuery(e.target.value),
+                        className: 'w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
+                    })
+                )
+            );
+        };
+
+        const VerifyTab = ({ schoolSearchQuery, setSchoolSearchQuery }) => {
+            return e('div', null,
+                e('div', { className: 'relative' },
+                    e('i', { 'data-lucide': 'search', className: 'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500' }),
+                    e('input', {
+                        type: 'text',
+                        placeholder: 'Search for accredited schools by name or accreditation number...',
+                        value: schoolSearchQuery,
+                        onChange: (e) => setSchoolSearchQuery(e.target.value),
+                        className: 'w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
+                    })
+                )
+            );
+        };
+
+        const WelcomeVideoSections = ({ setActiveTab }) => {
+            const sections = [
+                {
+                    id: 'welcome',
+                    title: 'Welcome to SafeLearner.online',
+                    description: 'Your comprehensive platform for educational excellence in South Africa. Discover qualifications, career paths, and opportunities tailored for you.',
+                    image_url: '{{ url_for('static', filename='smarty/welcome.jpg') }}',
+                    image_alt: 'Students in a classroom, welcoming new students',
+                    icon: 'sparkles',
+                    tabName: null // No navigation for welcome
+                },
+                {
+                    id: 'search',
+                    title: 'Search for Qualifications',
+                    description: 'Use our powerful search tool to find qualifications and skills programmes. Search by name, SAQA ID, or browse by category and NQF level.',
+                    image_url: '{{ url_for('static', filename='smarty/qualification.jpg') }}',
+                    image_alt: 'Teacher presenting to students',
+                    icon: 'search',
+                    tabName: 'occupational_qualifications'
+                },
+                {
+                    id: 'providers',
+                    title: 'Find Training Providers',
+                    description: 'Discover accredited schools, TVET colleges, and universities across all provinces. Verify accreditation and find contact details.',
+                    image_url: '{{ url_for('static', filename='smarty/trainig providers.jpg') }}',
+                    image_alt: 'Student reading a book',
+                    icon: 'building',
+                    tabName: 'training_providers'
+                },
+                {
+                    id: 'career',
+                    title: 'Career Guidance with "The Mind"',
+                    description: 'Our AI-powered career guidance tool helps you explore career paths based on your interests, skills, and location. Get personalized recommendations.',
+                    image_url: '{{ url_for('static', filename='smarty/career guidance with the mind.jpg') }}',
+                    image_alt: 'People walking on different career paths, symbolizing career guidance',
+                    icon: 'brain-circuit',
+                    tabName: 'career_paths'
+                },
+                {
+                    id: 'success',
+                    title: 'Bursaries & Learnerships',
+                    description: 'Access bursaries and learnerships to fund your education. Find opportunities that match your field of study and financial needs.',
+                    image_url: '{{ url_for('static', filename='smarty/bursaries & learnerships.jpg') }}',
+                    image_alt: 'Graduating students celebrating success',
+                    icon: 'trophy',
+                    tabName: 'bursaries'
+                },
+                {
+                    id: 'community',
+                    title: 'Latest News & Updates',
+                    description: 'Read the latest news, share experiences, and connect with fellow learners. Stay updated with educational developments in South Africa.',
+                    image_url: '{{ url_for('static', filename='smarty/latest news & updates.jpg') }}',
+                    image_alt: 'Happy diverse group of students collaborating',
+                    icon: 'newspaper',
+                    tabName: 'news'
+                },
+                {
+                    id: 'setas',
+                    title: 'Explore SETAs & Industries',
+                    description: 'Learn about Sector Education and Training Authorities. Find industry-specific qualifications and training opportunities.',
+                    image_url: '{{ url_for('static', filename='smarty/a76ed063-d170-49f0-829a-23e6a6e00206.jpg') }}',
+                    image_alt: 'Lightbulb over books, symbolizing ideas and innovation in education',
+                    icon: 'briefcase',
+                    tabName: 'setas'
+                },
+                {
+                    id: 'accommodation',
+                    title: 'Find Accommodation',
+                    description: 'Search for student accommodation near your institution. Filter by province, payment options (NSFAS, Bursary, Cash), and monthly rates.',
+                    image_url: '{{ url_for('static', filename='smarty/find accommodation.jpg') }}',
+                    image_alt: 'Students relaxing in a modern student accommodation',
+                    icon: 'home',
+                    tabName: 'accommodation'
+                },
+                {
+                    id: 'contact',
+                    title: 'Get in Touch',
+                    description: 'Have questions or need assistance? Send us a message and our team will get back to you as soon as possible.',
+                    video: null, // No video for contact form
+                    icon: 'mail',
+                    tabName: null,
+                    isContactForm: true
+                }
+            ];
+
+            const handleSectionClick = (tabName) => {
+                if (tabName) {
+                    setActiveTab(tabName);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            };
+
+            return e('div', { className: 'space-y-0' },
+                e('div', { className: 'text-center mb-12' },
+                    e('h2', { className: 'text-4xl font-bold text-white mb-4' },
+                        'How to Navigate ', e('span', { className: 'gradient-text' }, 'SafeLearner.online')
+                    ),
+                    e('p', { className: 'text-gray-400 text-lg max-w-3xl mx-auto' },
+                        'Click on any section below to explore that feature'
+                    )
+                ),
+                sections.map((section, index) => {
+                    const isEven = index % 2 === 0;
+                    const isClickable = section.tabName !== null;
+
+                    // Special handling for contact form
+                    if (section.isContactForm) {
+                        return e('div', {
+                            key: section.id,
+                            className: 'bg-gradient-to-br from-gray-800 to-gray-900 border-b border-gray-700 py-16'
+                        },
+                            e('div', { className: 'max-w-4xl mx-auto px-8' },
+                                e('div', { className: 'text-center mb-12' },
+                                    e('div', { className: 'flex items-center justify-center gap-3 mb-4' },
+                                        e('div', { className: 'p-3 bg-indigo-500/10 rounded-xl' },
+                                            e('i', {
+                                                'data-lucide': section.icon,
+                                                className: 'w-8 h-8 text-indigo-400'
+                                            })
+                                        )
+                                    ),
+                                    e('h3', { className: 'text-4xl font-bold text-white mb-4' },
+                                        section.title
+                                    ),
+                                    e('p', { className: 'text-gray-400 text-lg max-w-2xl mx-auto' },
+                                        section.description
+                                    )
+                                ),
+                                e(ContactForm)
+                            )
+                        );
+                    }
+
+                    return e('div', {
+                        key: section.id,
+                        onClick: () => handleSectionClick(section.tabName),
+                        className: `grid grid-cols-1 lg:grid-cols-2 gap-0 border-b border-gray-700 ${isClickable ? 'cursor-pointer hover:bg-gray-800/50' : ''} transition-all duration-300 group`
+                    },
+                        // Video/Image section
+                        e('div', {
+                            className: `relative aspect-video bg-gray-900 ${isEven ? 'lg:order-1' : 'lg:order-2'}`
+                        },
+                            section.image_url && e('img', {
+                                src: section.image_url,
+                                alt: section.image_alt,
+                                className: 'w-full h-full object-cover'
+                            }),
+                            isClickable && e('div', {
+                                className: 'absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-all duration-300 flex items-center justify-center'
+                            },
+                                e('div', { className: 'opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-4' },
+                                    e('i', { 'data-lucide': 'arrow-right', className: 'w-8 h-8 text-indigo-600' })
+                                )
+                            )
+                        ),
+                        // Content section
+                        e('div', {
+                            className: `flex flex-col justify-center p-8 lg:p-12 bg-gradient-to-br from-gray-800 to-gray-900 ${isEven ? 'lg:order-2' : 'lg:order-1'}`
+                        },
+                            e('div', { className: 'flex items-center gap-3 mb-4' },
+                                e('div', { className: 'p-3 bg-indigo-500/10 rounded-xl group-hover:bg-indigo-500/20 transition-colors' },
+                                    e('i', {
+                                        'data-lucide': section.icon,
+                                        className: 'w-6 h-6 text-indigo-400 group-hover:text-indigo-300 transition-colors'
+                                    })
+                                )
+                            ),
+                            e('h3', { className: 'text-3xl font-bold text-white mb-4 group-hover:text-indigo-300 transition-colors' },
+                                section.title
+                            ),
+                            e('p', { className: 'text-gray-400 text-lg leading-relaxed mb-6' },
+                                section.description
+                            ),
+                            isClickable && e('div', { className: 'flex items-center gap-2 text-indigo-400 font-semibold group-hover:gap-4 transition-all' },
+                                e('span', null, 'Explore'),
+                                e('i', { 'data-lucide': 'arrow-right', className: 'w-5 h-5' })
+                            )
+                        )
+                    );
+                })
+            );
+        };
+
+        const ContactForm = () => {
+            const [formData, setFormData] = useState({
+                name: '',
+                email: '',
+                subject: '',
+                message: ''
+            });
+            const [status, setStatus] = useState(''); // '', 'sending', 'success', 'error'
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setStatus('sending');
+
+                fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        setStatus('success');
+                        setFormData({ name: '', email: '', subject: '', message: '' });
+                        setTimeout(() => setStatus(''), 5000);
+                    } else {
+                        setStatus('error');
+                        setTimeout(() => setStatus(''), 5000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting contact form:', error);
+                    setStatus('error');
+                    setTimeout(() => setStatus(''), 5000);
+                });
+            };
+
+            const handleChange = (field, value) => {
+                setFormData({ ...formData, [field]: value });
+            };
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [status]);
+
+            return e('form', { onSubmit: handleSubmit, className: 'space-y-6' },
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                    e('div', null,
+                        e('label', { className: 'block text-sm font-medium text-gray-300 mb-2' }, 'Your Name'),
+                        e('input', {
+                            type: 'text',
+                            required: true,
+                            value: formData.name,
+                            onChange: (e) => handleChange('name', e.target.value),
+                            className: 'w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all',
+                            placeholder: 'John Doe'
+                        })
+                    ),
+                    e('div', null,
+                        e('label', { className: 'block text-sm font-medium text-gray-300 mb-2' }, 'Email Address'),
+                        e('input', {
+                            type: 'email',
+                            required: true,
+                            value: formData.email,
+                            onChange: (e) => handleChange('email', e.target.value),
+                            className: 'w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all',
+                            placeholder: 'john@example.com'
+                        })
+                    )
+                ),
+                e('div', null,
+                    e('label', { className: 'block text-sm font-medium text-gray-300 mb-2' }, 'Subject'),
+                    e('input', {
+                        type: 'text',
+                        required: true,
+                        value: formData.subject,
+                        onChange: (e) => handleChange('subject', e.target.value),
+                        className: 'w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all',
+                        placeholder: 'How can we help you?'
+                    })
+                ),
+                e('div', null,
+                    e('label', { className: 'block text-sm font-medium text-gray-300 mb-2' }, 'Message'),
+                    e('textarea', {
+                        required: true,
+                        rows: 6,
+                        value: formData.message,
+                        onChange: (e) => handleChange('message', e.target.value),
+                        className: 'w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none',
+                        placeholder: 'Tell us more about your inquiry...'
+                    })
+                ),
+                status === 'success' && e('div', { className: 'bg-green-500/10 border border-green-500/50 rounded-lg p-4 flex items-center gap-3' },
+                    e('i', { 'data-lucide': 'check-circle', className: 'w-5 h-5 text-green-400' }),
+                    e('p', { className: 'text-green-400' }, 'Thank you! Your message has been sent successfully.')
+                ),
+                status === 'error' && e('div', { className: 'bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-center gap-3' },
+                    e('i', { 'data-lucide': 'alert-circle', className: 'w-5 h-5 text-red-400' }),
+                    e('p', { className: 'text-red-400' }, 'Something went wrong. Please try again later.')
+                ),
+                e('button', {
+                    type: 'submit',
+                    disabled: status === 'sending',
+                    className: `w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${status === 'sending' ? '' : 'hover:shadow-lg hover:shadow-indigo-500/50'}`
+                },
+                    e('div', { className: `w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin ${status === 'sending' ? '' : 'hidden'}` }),
+                    e('i', { 'data-lucide': 'send', className: `w-5 h-5 ${status === 'sending' ? 'hidden' : ''}` }),
+                    status === 'sending' ? 'Sending...' : 'Send Message'
+                )
+            );
+        };
+
+        const NewsTab = ({ setActiveTab }) => {
+            const [posts, setPosts] = useState([]);
+
+            useEffect(() => {
+                fetch('/api/posts')
+                    .then(res => res.json())
+                    .then(data => setPosts(data))
+                    .catch(console.error);
+            }, []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [posts]);
+
+            return e('div', { className: 'space-y-6' },
+                e('div', { className: 'mb-8' },
+                    e('h2', { className: 'text-3xl font-bold text-white mb-2 flex items-center gap-3' },
+                        e('i', { 'data-lucide': 'newspaper', className: 'w-8 h-8 text-indigo-400' }),
+                        'Latest News & Updates'
+                    ),
+                    e('p', { className: 'text-gray-400 text-lg' },
+                        'Stay informed with the latest developments in South African education and skills development'
+                    )
+                ),
+                posts.length > 0
+                    ? posts.map(post => e(PostCard, { key: post.id, post }))
+                    : e('div', { className: 'text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700' },
+                        e('i', { 'data-lucide': 'newspaper', className: 'w-16 h-16 mx-auto mb-4 text-gray-600' }),
+                        e('p', { className: 'text-gray-500 text-lg' }, 'No news posts available yet.')
+                    )
+            );
+        };
+
+        const Comment = ({ comment, post, onCommentPosted }) => {
+            const [showReplyForm, setShowReplyForm] = useState(false);
+            const [reply, setReply] = useState('');
+
+            const handleReplySubmit = (e) => {
+                e.preventDefault();
+                if (reply.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: reply, parent_id: comment.id })
+                    })
+                        .then(() => {
+                            setReply('');
+                            setShowReplyForm(false);
+                            onCommentPosted(); // Callback to refresh comments
+                        })
+                        .catch(console.error);
+                }
+            };
+
+            return e('div', { className: 'ml-4 mt-2' },
+                e('div', { className: 'text-sm bg-gray-700/50 p-3 rounded-lg border border-gray-700' },
+                    e('div', { className: 'flex items-center gap-2 mb-2' },
+                        e('i', { 'data-lucide': 'user-circle', className: 'w-4 h-4 text-indigo-400' }),
+                        e('span', { className: 'font-semibold text-indigo-300 text-xs' }, comment.username || 'Anonymous')
+                    ),
+                    e('p', { className: 'text-gray-200' }, renderTextWithLinks(comment.comment)),
+                    e('div', { className: 'flex items-center justify-between mt-2' },
+                        e('span', { className: 'text-xs text-gray-500' }, new Date(comment.created_at).toLocaleString()),
+                        e('button', { onClick: () => setShowReplyForm(!showReplyForm), className: 'text-xs font-semibold text-indigo-400 hover:text-indigo-300' }, 'Reply')
+                    )
+                ),
+                showReplyForm && e('form', { onSubmit: handleReplySubmit, className: 'mt-2 ml-4' },
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('input', {
+                            type: 'text',
+                            placeholder: 'Write a reply...',
+                            value: reply,
+                            onChange: (e) => setReply(e.target.value),
+                            className: 'flex-grow p-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500'
+                        }),
+                        e('button', { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-3 rounded-lg transition-colors' }, 'Reply')
+                    )
+                ),
+                comment.children && e('div', { className: 'ml-4 border-l border-gray-700 pl-2' },
+                    comment.children.map(child => e(Comment, { key: child.id, comment: child, post, onCommentPosted }))
+                )
+            );
+        }
+
+        const PostCard = ({ post }) => {
+            const [likes, setLikes] = useState(post.likes);
+            const [comments, setComments] = useState([]);
+            const [showComments, setShowComments] = useState(false);
+            const [newComment, setNewComment] = useState('');
+
+            const fetchComments = () => {
+                fetch(`/api/posts/${post.id}/comments`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const commentsById = {};
+                        data.forEach(comment => commentsById[comment.id] = { ...comment, children: [] });
+
+                        const nestedComments = [];
+                        data.forEach(comment => {
+                            if (comment.parent_id && commentsById[comment.parent_id]) {
+                                commentsById[comment.parent_id].children.push(commentsById[comment.id]);
+                            } else {
+                                nestedComments.push(commentsById[comment.id]);
+                            }
+                        });
+                        setComments(nestedComments);
+                    })
+                    .catch(console.error);
+            };
+
+            useEffect(() => {
+                if (showComments) {
+                    fetchComments();
+                }
+            }, [showComments, post.id]);
+
+            const handleLike = () => {
+                const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+                if (!likedPosts.includes(post.id)) {
+                    fetch(`/api/posts/${post.id}/like`, { method: 'POST' })
+                        .then(() => {
+                            setLikes(likes + 1);
+                            localStorage.setItem('likedPosts', JSON.stringify([...likedPosts, post.id]));
+                        })
+                        .catch(console.error);
+                } else {
+                    alert('You have already liked this post.');
+                }
+            };
+
+            const handleCommentSubmit = (e) => {
+                e.preventDefault();
+                if (newComment.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: newComment })
+                    })
+                        .then(() => {
+                            setNewComment('');
+                            fetchComments(); // Refresh comments
+                        })
+                        .catch(console.error);
+                }
+            };
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg animate-fadeIn' },
+                post.image_path && e('div', { className: 'w-full h-64 bg-gray-900' },
+                    e('img', { src: `/${post.image_path}`, className: 'w-full h-full object-cover' })),
+                e('div', { className: 'p-6' },
+                    e('h3', { className: 'text-2xl font-bold text-white mb-2' }, renderTextWithLinks(post.title)),
+                    e('p', { className: 'text-gray-300 leading-relaxed' }, renderTextWithLinks(post.content)),
+                    e('div', { className: 'flex items-center justify-between mt-6 pt-4 border-t border-gray-700 text-sm text-gray-500' },
+                        e('span', null, new Date(post.created_at).toLocaleString()),
+                        e('div', { className: 'flex items-center gap-4' },
+                            e('button', { onClick: handleLike, className: 'flex items-center gap-1 hover:text-indigo-400 transition-colors' },
+                                e('i', { 'data-lucide': 'thumbs-up', className: 'w-4 h-4' }), likes
+                            ),
+                            e('button', { onClick: () => setShowComments(!showComments), className: 'flex items-center gap-1 hover:text-indigo-400 transition-colors' },
+                                e('i', { 'data-lucide': 'message-square', className: 'w-4 h-4' }), 'Comment'
+                            )
+                        )
+                    )
+                ),
+                showComments && e('div', { className: 'p-6 bg-gray-800/50 border-t border-gray-700' },
+                    e('h4', { className: 'text-lg font-semibold text-white mb-4' }, 'Comments'),
+                    e('div', { className: 'space-y-4 mb-6' },
+                        comments.map(comment => e(Comment, { key: comment.id, comment, post, onCommentPosted: fetchComments }))
+                    ),
+                    e('form', { onSubmit: handleCommentSubmit, className: 'relative' },
+                        e('div', { className: 'flex items-center gap-2' },
+                            e('input', {
+                                type: 'text',
+                                placeholder: 'Write a comment...',
+                                value: newComment,
+                                onChange: (e) => setNewComment(e.target.value),
+                                className: 'flex-grow p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
+                            }),
+                            e('button', { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors' }, 'Post')
+                        )
+                    )
+                )
+            );
+        };
+
+        const SearchResults = ({ results }) => {
+            if (results.length === 0) {
+                return e('div', { className: 'mt-8 text-center text-gray-500 py-12 bg-gray-800/30 rounded-xl border border-dashed border-gray-700' },
+                    e('i', { 'data-lucide': 'search', className: 'w-12 h-12 mx-auto mb-4 text-gray-600' }),
+                    'No results to display. Start a search above.'
+                );
+            }
+
+            const qualifications = results.filter(r => r.type === 'qualification');
+            const skillProgrammes = results.filter(r => r.type === 'skill_programme');
+            const schools = results.filter(r => r.type === 'school');
+
+            return e('div', { className: 'mt-8 space-y-8 animate-fadeIn' },
+                qualifications.length > 0 && e('div', { className: 'p-6 bg-gray-800/50 border border-gray-700 rounded-xl' },
+                    e('h2', { className: 'text-xl font-bold text-white mb-6 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'award', className: 'w-6 h-6 text-indigo-400' }), 'Qualifications'
+                    ),
+                    e('div', { className: 'grid gap-4' }, qualifications.map(item => e(ResultCard, { key: item.id, item })))
+                ),
+                skillProgrammes.length > 0 && e('div', { className: 'p-6 bg-gray-800/50 border border-gray-700 rounded-xl' },
+                    e('h2', { className: 'text-xl font-bold text-white mb-6 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'star', className: 'w-6 h-6 text-yellow-400' }), 'Skill Programmes'
+                    ),
+                    e('div', { className: 'grid gap-4' }, skillProgrammes.map(item => e(ResultCard, { key: item.id, item })))
+                ),
+                schools.length > 0 && e('div', { className: 'p-6 bg-gray-800/50 border border-gray-700 rounded-xl' },
+                    e('h2', { className: 'text-xl font-bold text-white mb-6 flex items-center gap-2' },
+                        e('div', { className: 'w-2 h-8 bg-green-500 rounded-full' }), 'Accredited Schools'
+                    ),
+                    e('div', { className: 'grid gap-4' }, schools.map(item => e(ResultCard, { key: item.id, item })))
+                )
+            );
+        };
+
+        const SchoolResults = ({ results, userFavorites, toggleFavorite }) => {
+            if (results.length === 0) return null;
+
+            return e('div', { className: 'mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn' },
+                results.map(school => e(SchoolCard, { key: school.id, school, userFavorites, toggleFavorite }))
+            );
+        };
+
+        const SchoolCard = ({ school, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`school_${school.id}`);
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group relative' },
+                e('div', { className: 'absolute top-4 right-4 z-10' },
+                    e(FavoriteButton, { type: 'school', id: school.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'flex items-center gap-3 mb-4' },
+                    e('div', { className: 'p-2 bg-green-500/10 rounded-lg' },
+                        e('i', { 'data-lucide': 'check-circle', className: 'w-6 h-6 text-green-400' })
+                    ),
+                    e('span', { className: 'text-xs font-semibold text-green-400 uppercase tracking-wide px-2 py-1 bg-green-500/10 rounded-md border border-green-500/20' }, 'Accredited')
+                ),
+                e('h3', { className: 'text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors pr-8' }, school.school_name),
+                e('div', { className: 'space-y-2 mb-4' },
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'hash', className: 'w-4 h-4' }), school.accreditation_number),
+                    (school.province || school.city) && e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4' }),
+                        [school.city, school.province].filter(Boolean).join(', ')
+                    )
+                ),
+                e('div', { className: 'mt-auto pt-4 border-t border-gray-700' },
+                    e('div', { className: 'flex items-center justify-between text-xs text-gray-500' },
+                        e('span', null, 'Registration Status:'),
+                        e('span', { className: 'text-green-400 font-medium' }, 'Active')
+                    )
+                )
+            );
+        };
+
+        const AccommodationTab = ({ userFavorites, toggleFavorite }) => {
+            const [accommodations, setAccommodations] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/accommodations')
+                    .then(res => res.json())
+                    .then(data => {
+                        setAccommodations(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching accommodations:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'space-y-8 animate-fadeIn' },
+                Object.keys(accommodations).sort().map(province =>
+                    e('div', { key: province, className: 'p-6 bg-gray-800/30 border border-gray-700 rounded-xl' },
+                        e('h2', { className: 'text-2xl font-bold text-white mb-6 flex items-center gap-2' },
+                            e('i', { 'data-lucide': 'map-pin', className: 'w-6 h-6 text-indigo-400' }), province
+                        ),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            accommodations[province].map(item => e(AccommodationCard, { key: item.id, item, userFavorites, toggleFavorite }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const AccommodationCard = ({ item, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`accommodation_${item.id}`);
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-bold text-white group-hover:text-indigo-300 transition-colors' }, item.accommodation_name),
+                    e(FavoriteButton, { type: 'accommodation', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'mt-2' },
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-3 h-3 text-gray-500' }),
+                        `${item.suburb}, ${item.city}`
+                    )
+                ),
+                e('div', { className: 'mt-6 pt-4 border-t border-gray-700' },
+                    e('p', { className: 'text-xl font-bold text-white mb-3' }, `R ${item.monthly_pay}`, e('span', { className: 'text-sm text-gray-500 font-normal ml-1' }, '/ month')),
+                    e('div', { className: 'flex flex-wrap gap-2' },
+                        item.payment_nsfas === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' }, 'NSFAS'),
+                        item.payment_bursary === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-md bg-green-500/10 text-green-300 border border-green-500/20' }, 'Bursary'),
+                        item.payment_cash === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-md bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' }, 'Cash')
+                    )
+                )
+            );
+        };
+
+        const TvetCollegesTab = ({ userFavorites, toggleFavorite }) => {
+            const [colleges, setColleges] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/tvet-colleges')
+                    .then(res => res.json())
+                    .then(data => {
+                        setColleges(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching tvet colleges:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'space-y-8 animate-fadeIn' },
+                Object.keys(colleges).sort().map(province =>
+                    e('div', { key: province, className: 'p-6 bg-gray-800/30 border border-gray-700 rounded-xl' },
+                        e('h2', { className: 'text-2xl font-bold text-white mb-6' }, province),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            colleges[province].map(item => e(TvetCollegeCard, { key: item.id, item, userFavorites, toggleFavorite }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const TvetCollegeCard = ({ item, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`tvet_college_${item.id}`);
+
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                if (!/^(https?|ftp):\/\//i.test(url)) {
+                    return `http://${url}`;
+                }
+                return url;
+            };
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-bold text-white group-hover:text-indigo-300 transition-colors' }, item.college_name),
+                    e(FavoriteButton, { type: 'tvet_college', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'mt-4 space-y-3' },
+                    item.physical_address && e('div', { className: 'flex items-start gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5' }),
+                        e('span', null, item.physical_address)
+                    ),
+                    item.tel && e('div', { className: 'flex items-center gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.tel)
+                    ),
+                    item.web && e('div', { className: 'flex items-center gap-3 text-sm' },
+                        e('i', { 'data-lucide': 'globe', className: 'w-4 h-4 text-gray-500' }),
+                        e('a', { href: formatUrl(item.web), target: '_blank', rel: 'noopener noreferrer', className: 'text-indigo-400 hover:text-indigo-300 hover:underline transition-colors' }, 'Website')
+                    )
+                )
+            );
+        };
+
+        const SetasTab = () => {
+            const [setas, setSetas] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/setas')
+                    .then(res => res.json())
+                    .then(data => {
+                        setSetas(data.sort((a, b) => a.seta_name.localeCompare(b.seta_name)));
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching setas:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn' },
+                setas.map(item => e(SetaCard, { key: item.id, item }))
+            );
+        };
+
+        const SetaCard = ({ item }) => {
+            const [expanded, setExpanded] = useState(false);
+
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                if (!/^(https?|ftp):\/\//i.test(url)) {
+                    return `http://${url}`;
+                }
+                return url;
+            };
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-blue-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group relative' },
+                e('div', { className: 'flex items-center justify-between mb-4' },
+                    e('h3', { className: 'font-bold text-white text-lg pr-12' }, item.seta_name),
+                    e('div', { className: 'bg-blue-500/10 p-2 rounded-lg' },
+                        e('i', { 'data-lucide': 'briefcase', className: 'w-6 h-6 text-blue-400' })
+                    )
+                ),
+                e('div', { className: 'space-y-3 mb-4' },
+                    item.telephone && e('div', { className: 'flex items-center gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.telephone)
+                    ),
+                    item.website && e('div', { className: 'flex items-center gap-3 text-sm' },
+                        e('i', { 'data-lucide': 'globe', className: 'w-4 h-4 text-gray-500' }),
+                        e('a', { href: formatUrl(item.website), target: '_blank', rel: 'noopener noreferrer', className: 'text-blue-400 hover:text-blue-300 hover:underline transition-colors' }, 'Visit Website')
+                    )
+                ),
+
+                // Description, Purpose & Qualifications (Collapsible)
+                expanded && e('div', { className: 'mt-4 pt-4 border-t border-gray-700 space-y-4 animate-fadeIn' },
+                    item.description && e('div', null,
+                        e('h4', { className: 'text-sm font-semibold text-gray-300 mb-1' }, 'Description'),
+                        e('p', { className: 'text-sm text-gray-400 leading-relaxed' }, item.description)
+                    ),
+                    item.purpose && e('div', null,
+                        e('h4', { className: 'text-sm font-semibold text-gray-300 mb-1' }, 'Purpose'),
+                        e('p', { className: 'text-sm text-gray-400 leading-relaxed' }, item.purpose)
+                    ),
+                    item.linked_qualifications && item.linked_qualifications.length > 0 && e('div', null,
+                        e('h4', { className: 'text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2' },
+                            e('i', { 'data-lucide': 'graduation-cap', className: 'w-4 h-4 text-indigo-400' }),
+                            'Accredited Qualifications'
+                        ),
+                        e('div', { className: 'bg-gray-900/50 rounded-lg p-3 border border-gray-700/50 max-h-48 overflow-y-auto' },
+                            e('ul', { className: 'space-y-1' },
+                                item.linked_qualifications.map((qual, idx) =>
+                                    e('li', { key: idx, className: 'text-xs text-gray-400 flex items-start gap-2' },
+                                        e('span', { className: 'text-indigo-500 font-bold' }, '•'),
+                                        qual
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+
+                e('button', {
+                    onClick: () => {
+                        setExpanded(!expanded);
+                        // Re-trigger lucide icons after expansion if needed
+                        setTimeout(() => lucide.createIcons(), 50);
+                    },
+                    className: 'mt-auto w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2'
+                },
+                    expanded ? 'Show Less' : 'View Details',
+                    e('i', { 'data-lucide': expanded ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' })
+                )
+            );
+        };
+
+        // --- THE MIND WIZARD COMPONENTS ---
+
+        const MindWizard = ({ userFavorites, toggleFavorite }) => {
+            const [step, setStep] = useState(1);
+            const [formData, setFormData] = useState({
+                status: '',
+                highest_grade: '',
+                interests: [],
+                goal: '',
+                location: '',
+                financial_status: '',
+                path_preference: '',
+                institution_type: ''
+            });
+            const [recommendations, setRecommendations] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            const nextStep = () => setStep(step + 1);
+            const prevStep = () => setStep(step - 1);
+
+            const handleSelection = (field, value) => {
+                setFormData({ ...formData, [field]: value });
+            };
+
+            const toggleInterest = (interest) => {
+                const currentInterests = formData.interests;
+                if (currentInterests.includes(interest)) {
+                    setFormData({ ...formData, interests: currentInterests.filter(i => i !== interest) });
+                } else {
+                    setFormData({ ...formData, interests: [...currentInterests, interest] });
+                }
+            };
+
+            const submitForm = () => {
+                setLoading(true);
+                setStep(10); // Processing step
+
+                fetch('/api/mind/recommend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        setTimeout(() => {
+                            setRecommendations(data);
+                            setStep(11); // Results step
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        setLoading(false);
+                        alert("The Mind is having trouble connecting to the network.");
+                    });
+            };
+
+            return e('div', { className: 'max-w-4xl mx-auto py-12 text-white' },
+                e(MindHeader),
+                e('div', { className: 'mt-12' },
+                    step === 1 && e(StepIntro, { nextStep }),
+                    step === 2 && e(StepStatus, { formData, handleSelection, nextStep, prevStep }),
+                    step === 3 && e(StepAcademics, { formData, handleSelection, nextStep, prevStep }),
+                    step === 4 && e(StepInterests, { formData, toggleInterest, nextStep, prevStep }),
+                    step === 5 && e(StepGoal, { formData, handleSelection, nextStep, prevStep }),
+                    step === 6 && e(StepFinancial, { formData, handleSelection, nextStep, prevStep }),
+                    step === 7 && e(StepLocation, { formData, handleSelection, nextStep, prevStep }),
+                    step === 8 && e(StepPathPreference, { formData, handleSelection, nextStep, prevStep }),
+                    step === 9 && e(StepInstitutionType, { formData, handleSelection, submitForm, prevStep }),
+                    step === 10 && e(StepProcessing),
+                    step === 11 && e(StepResults, { recommendations, formData, userFavorites, toggleFavorite })
+                )
+            );
+        };
+
+        const MindHeader = () => {
+            return e('div', { className: 'text-center' },
+                e('div', { className: 'w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl mx-auto flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20' },
+                    e('i', { 'data-lucide': 'brain-circuit', className: 'w-10 h-10 text-white' })
+                ),
+                e('h1', { className: 'text-4xl md:text-6xl font-bold mb-4 tracking-tight' },
+                    'The ', e('span', { className: 'gradient-text' }, 'Mind')
+                ),
+                e('p', { className: 'text-gray-400 text-lg md:text-xl max-w-2xl mx-auto' }, 'Your personal AI guidance counselor. Tell me about yourself, and I\'ll find your perfect path.')
+            );
+        };
+
+        const StepIntro = ({ nextStep }) => {
+            return e('div', { className: 'text-center max-w-2xl mx-auto fade-in' },
+                e('h2', { className: 'text-2xl font-semibold mb-6' }, "Hello! I'm here to help you find your path."),
+                e('p', { className: 'text-gray-600 mb-8 text-lg' },
+                    "I'll ask you a few simple questions about yourself, your interests, and your goals. Then, I'll leverage our entire database to find the perfect opportunities for you."
+                ),
+                e('button', {
+                    onClick: nextStep,
+                    className: 'bg-white text-gray-900 px-10 py-4 rounded-xl font-bold text-xl hover:bg-gray-100 transition shadow-xl hover:shadow-2xl hover:scale-105 transform duration-200 mt-8'
+                }, "Start Journey")
+            );
+        };
+
+        const StepStatus = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const options = ['Learner (Grade 8-12)', 'School Leaver / Matriculant', 'Student', 'Employed', 'Unemployed'];
+            return e(WizardLayout, {
+                title: "What represents you best right now?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    options.map(opt => e(OptionButton, { key: opt, label: opt, selected: formData.status === opt, onClick: () => { handleSelection('status', opt); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepAcademics = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const options = ['Grade 9 or lower', 'Grade 10', 'Grade 11', 'Grade 12 (Matric)', 'Diploma / Certificate', 'Degree'];
+            return e(WizardLayout, {
+                title: "What is your highest level of education?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    options.map(opt => e(OptionButton, { key: opt, label: opt, selected: formData.highest_grade === opt, onClick: () => { handleSelection('highest_grade', opt); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepInterests = ({ formData, toggleInterest, nextStep, prevStep }) => {
+            const interests = ['Technology & Computers', 'Engineering & Construction', 'Business & Finance', 'Art & Design', 'Healthcare', 'Education', 'Legal & Services', 'Science', 'Hospitality & Tourism'];
+            return e(WizardLayout, {
+                title: "What are you passionate about? (Pick multiple)",
+                prevStep,
+                children: [
+                    e('div', { key: 'grid', className: 'grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8' },
+                        interests.map(int => e(OptionButton, { key: int, label: int, selected: formData.interests.includes(int), onClick: () => toggleInterest(int) }))
+                    ),
+                    e('div', { key: 'action', className: 'text-center' },
+                        e('button', { onClick: nextStep, disabled: formData.interests.length === 0, className: `px-10 py-4 rounded-xl font-bold transition-all shadow-lg ${formData.interests.length > 0 ? 'bg-indigo-600 hover:bg-indigo-500 text-white hover:scale-105' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}` }, "Continue")
+                    )
+                ]
+            });
+        };
+
+        const StepGoal = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const goals = [
+                { id: 'degree', label: 'I want a Full Qualification / Degree', desc: 'Long-term study (3-4 years)' },
+                { id: 'skill', label: 'I want a Skill / Trade', desc: 'Quick employment (6-18 months)' },
+                { id: 'upskill', label: 'I want to Upskill', desc: 'Short courses to improve my resume' },
+                { id: 'bursary', label: 'I need Funding', desc: 'Find bursaries and scholarships' },
+                { id: 'business', label: 'Grow a Small Business', desc: 'Entrepreneurship & SMME Support' }
+            ];
+            return e(WizardLayout, {
+                title: "What is your main goal right now?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    goals.map(opt => e(OptionCard, { key: opt.id, title: opt.label, description: opt.desc, selected: formData.goal === opt.id, onClick: () => { handleSelection('goal', opt.id); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepFinancial = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const options = [
+                { id: 'full_pay', label: 'I can pay full fees', desc: 'Family/Self funded' },
+                { id: 'partial', label: 'I need partial funding', desc: 'Can pay registration/some fees' },
+                { id: 'bursary', label: 'I need a full bursary', desc: 'Cannot afford fees' }
+            ];
+            return e(WizardLayout, {
+                title: "Can you afford tertiary education fees?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    options.map(opt => e(OptionCard, { key: opt.id, title: opt.label, description: opt.desc, selected: formData.financial_status === opt.id, onClick: () => { handleSelection('financial_status', opt.id); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepLocation = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const provinces = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
+            return e(WizardLayout, {
+                title: "Where would you like to study?",
+                prevStep,
+                children: e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-4' },
+                    provinces.map(prov => e(OptionButton, { key: prov, label: prov, selected: formData.location === prov, onClick: () => { handleSelection('location', prov); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepPathPreference = ({ formData, handleSelection, nextStep, prevStep }) => {
+            const options = [
+                { id: 'classroom', label: 'Full-time Classroom', desc: 'Standard academic environment at a University or College' },
+                { id: 'learnership', label: 'Learning while Working', desc: 'Practical experience with a company (Learnership/Apprenticeship)' }
+            ];
+            return e(WizardLayout, {
+                title: "How do you prefer to learn?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    options.map(opt => e(OptionCard, { key: opt.id, title: opt.label, description: opt.desc, selected: formData.path_preference === opt.id, onClick: () => { handleSelection('path_preference', opt.id); setTimeout(nextStep, 300); } }))
+                )
+            });
+        };
+
+        const StepInstitutionType = ({ formData, handleSelection, submitForm, prevStep }) => {
+            const options = [
+                { id: 'university', label: 'University', desc: 'Academic degrees and research' },
+                { id: 'tvet', label: 'TVET College', desc: 'Technical and vocational training' },
+                { id: 'private', label: 'Private Provider', desc: 'Accredited specialist training centers' },
+                { id: 'any', label: 'No Preference', desc: 'Find the best match regardless of type' }
+            ];
+            return e(WizardLayout, {
+                title: "What type of institution do you prefer?",
+                prevStep,
+                children: e('div', { className: 'grid gap-4' },
+                    options.map(opt => e(OptionCard, { key: opt.id, title: opt.label, description: opt.desc, selected: formData.institution_type === opt.id, onClick: () => { handleSelection('institution_type', opt.id); setTimeout(submitForm, 300); } }))
+                )
+            });
+        };
+
+        const StepProcessing = () => {
+            return e('div', { className: 'text-center py-20 fade-in' },
+                e('div', { className: 'w-24 h-24 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-8' }),
+                e('h3', { className: 'text-3xl font-bold mb-4' }, "The Mind is thinking..."),
+                e('p', { className: 'text-gray-400 text-lg' }, "Analyzing thousands of qualifications and schools for you.")
+            );
+        };
+
+        const StepResults = ({ recommendations, formData, userFavorites, toggleFavorite }) => {
+            const [saving, setSaving] = useState(false);
+            const [saved, setSaved] = useState(false);
+            const isLoggedIn = session && session.user_id;
+
+            if (!recommendations) return null;
+
+            const handleSaveProfile = () => {
+                setSaving(true);
+                const resultToSave = {
+                    input: formData,
+                    recommendations: recommendations
+                };
+
+                fetch('/api/mind/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(resultToSave)
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            setSaved(true);
+                            setSaving(false);
+                        } else {
+                            alert("Failed to save. Please try logging in again.");
+                            setSaving(false);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        setSaving(false);
+                    });
+            };
+
+            return e('div', { className: 'fade-in' },
+                e('div', { className: 'text-center mb-16' },
+                    e('h2', { className: 'text-4xl font-bold mb-4' }, "I found something for you!"),
+                    e('p', { className: 'text-2xl text-indigo-400 font-light' }, recommendations.insight_message),
+                    isLoggedIn && !saved && e('button', {
+                        onClick: handleSaveProfile,
+                        disabled: saving,
+                        className: 'mt-8 bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2 mx-auto'
+                    }, saving ? 'Saving...' : 'Save Result to Profile'),
+                    isLoggedIn && saved && e('div', { className: 'mt-8 text-green-400 font-bold text-lg flex items-center justify-center gap-2' },
+                        e('i', { 'data-lucide': 'check-circle', className: 'w-6 h-6' }), "Saved to Profile"
+                    ),
+                    !isLoggedIn && e('div', { className: 'mt-8 text-gray-500' },
+                        e('a', { href: '/login', className: 'text-indigo-400 hover:underline' }, "Log in"), " to save this result to your profile."
+                    )
+                ),
+                e('div', { className: 'grid gap-12' },
+
+                    // Business Support Section (SETAs)
+                    recommendations.business_support && recommendations.business_support.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Business Support & SETAs"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.business_support.map((seta, i) => e(SetaCard, { key: i, item: seta }))
+                        )
+                    ),
+
+                    recommendations.paths.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Recommended Paths"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.paths.map((path, i) => e(MindResultCard, { key: i, item: path, type: 'path', userFavorites, toggleFavorite }))
+                        )
+                    ),
+
+                    // Governing Bodies (SETAs) for recommended paths
+                    recommendations.governing_bodies && recommendations.governing_bodies.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200 flex items-center gap-3' },
+                            e('i', { 'data-lucide': 'landmark', className: 'text-indigo-400' }),
+                            "Governing Bodies (Accredited by)"
+                        ),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.governing_bodies.map((seta, i) => e(SetaCard, { key: i, item: seta }))
+                        )
+                    ),
+                    recommendations.schools.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Recommended Institutions"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.schools.map((school, i) => e(MindResultCard, { key: i, item: school, type: school.type || 'school', userFavorites, toggleFavorite }))
+                        )
+                    ),
+
+                    recommendations.bursaries && recommendations.bursaries.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Financial Aid & Bursaries"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.bursaries.map((bursary, i) => e(MindResultCard, { key: i, item: bursary, type: 'bursary', userFavorites, toggleFavorite }))
+                        )
+                    ),
+
+                    recommendations.learnerships && recommendations.learnerships.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Learnerships & Internships"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.learnerships.map((learn, i) => e(MindResultCard, { key: i, item: learn, type: 'learnership', userFavorites, toggleFavorite }))
+                        )
+                    ),
+
+                    recommendations.accommodations && recommendations.accommodations.length > 0 && e('section', null,
+                        e('h3', { className: 'text-2xl font-bold mb-6 border-b border-gray-800 pb-4 text-gray-200' }, "Student Accommodation"),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                            recommendations.accommodations.map((accom, i) => e(MindResultCard, { key: i, item: accom, type: 'accommodation', userFavorites, toggleFavorite }))
+                        )
+                    )
+                ),
+                e('div', { className: 'text-center mt-12' },
+                    e('button', { onClick: () => window.location.reload(), className: 'text-gray-500 hover:text-gray-900 underline' }, "Start Over")
+                )
+            );
+        };
+
+        const WizardLayout = ({ title, children, prevStep }) => {
+            return e('div', { className: 'max-w-2xl mx-auto fade-in' },
+                e('div', { className: 'mb-8 flex items-center' },
+                    prevStep && e('button', { onClick: prevStep, className: 'p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition mr-4' },
+                        e('i', { 'data-lucide': 'arrow-left', className: 'w-6 h-6' })
+                    ),
+                    e('h2', { className: 'text-2xl md:text-3xl font-bold leading-tight' }, title)
+                ),
+                children
+            );
+        };
+
+        const OptionButton = ({ label, selected, onClick }) => {
+            return e('button', {
+                onClick: onClick,
+                className: `w-full text-left p-6 rounded-xl border-2 transition-all duration-200 shadow-sm flex items-center justify-between group ${selected
+                    ? 'border-indigo-500 bg-indigo-500/10 text-white shadow-indigo-500/20'
+                    : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
+                    }`
+            },
+                e('span', { className: 'text-lg font-medium' }, label),
+                selected && e('i', { 'data-lucide': 'check-circle', className: 'w-6 h-6 text-indigo-400' })
+            );
+        };
+
+        const OptionCard = ({ title, description, selected, onClick }) => {
+            return e('button', {
+                onClick: onClick,
+                className: `w-full text-left p-6 rounded-xl border-2 transition-all duration-200 shadow-sm flex items-start gap-4 group ${selected
+                    ? 'border-indigo-500 bg-indigo-500/10 text-white shadow-indigo-500/20'
+                    : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
+                    }`
+            },
+                e('div', { className: `mt-1 p-2 rounded-lg ${selected ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-white'}` },
+                    e('i', { 'data-lucide': 'check', className: 'w-4 h-4' })
+                ),
+                e('div', null,
+                    e('h3', { className: 'text-lg font-bold mb-1' }, title),
+                    e('p', { className: 'text-sm opacity-80' }, description)
+                )
+            );
+        };
+
+        const MindResultCard = ({ item, type, userFavorites, toggleFavorite }) => {
+            const isPath = type === 'path';
+            const favType = item.type || (isPath ? 'career_path' : 'school');
+            const isFavorited = userFavorites && userFavorites.has(`${favType}_${item.id}`);
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-8 hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col h-full shadow-lg relative group' },
+                e('div', { className: 'absolute top-6 right-6 z-10' },
+                    e(FavoriteButton, { type: favType, id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'flex items-start justify-between mb-4' },
+                    e('div', { className: `p-3 rounded-lg ${isPath ? 'bg-indigo-500/10 text-indigo-400' : 'bg-green-500/10 text-green-400'}` },
+                        e('i', { 'data-lucide': isPath ? 'graduation-cap' : 'building-2', className: 'w-6 h-6' })
+                    ),
+                    isPath && e('span', { className: 'text-xs font-bold uppercase tracking-wider text-gray-500 pr-12' }, item.match_reason)
+                ),
+                e('h3', { className: 'text-xl font-bold text-white mb-2 pr-8' }, isPath ? item.title : (item.school_name || item.university_name || item.name || item.accommodation_name || item.title)),
+                e('div', { className: 'text-gray-400 text-sm mb-6 flex-grow space-y-2' },
+                    isPath ? e('p', null, item.description) :
+                        type === 'accommodation' ? e('p', { className: 'flex items-center gap-2' }, e('i', { 'data-lucide': 'map-pin', className: 'w-3 h-3 text-indigo-400' }), `${item.suburb}, ${item.city} (${item.province})`) :
+                            type === 'learnership' ? e('p', { className: 'flex items-center gap-2' }, e('i', { 'data-lucide': 'map-pin', className: 'w-3 h-3 text-indigo-400' }), `${item.location}`) :
+                                type === 'bursary' ? e('p', { className: 'flex items-center gap-2' }, e('i', { 'data-lucide': 'building', className: 'w-3 h-3 text-indigo-400' }), item.provider) :
+                                    e('p', { className: 'flex items-center gap-2' }, e('i', { 'data-lucide': 'map-pin', className: 'w-3 h-3 text-indigo-400' }), (item.physical_address || item.city || item.location || item.provider))
+                ),
+
+                isPath && e('div', { className: 'flex gap-2' },
+                    e('span', { className: 'px-3 py-1 bg-gray-700 rounded-lg text-xs font-medium text-gray-300' }, item.nqf_level ? `NQF ${item.nqf_level}` : 'NQF TBD'),
+                    e('span', { className: 'px-3 py-1 bg-gray-700 rounded-lg text-xs font-medium text-gray-300' }, item.credits ? `${item.credits} Credits` : 'Credits TBD')
+                ),
+                !isPath && e('div', { className: 'flex flex-wrap gap-2' },
+                    e('span', { className: 'px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-xs font-medium' }, 'Legit'),
+                    type === 'learnership' && item.stipend && e('span', { className: 'px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-medium' }, `Stipend: R${item.stipend}`),
+                    type === 'learnership' && item.duration && e('span', { className: 'px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-medium' }, item.duration),
+                    type === 'bursary' && item.closing_date && e('span', { className: 'px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-medium' }, `Closes: ${item.closing_date}`),
+                    type === 'university' && e('span', { className: 'px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-xs font-medium' }, 'University'),
+                    type === 'tvet' && e('span', { className: 'px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-medium' }, 'TVET College'),
+                    type === 'school' && e('span', { className: 'px-3 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-lg text-xs font-medium' }, 'Private Provider')
+                )
+            );
+        };
+
+        const CareerPathsTab = ({ userFavorites, toggleFavorite }) => {
+            return e(MindWizard, { userFavorites, toggleFavorite });
+        };
+
+        const BursaryScholarshipTab = ({ userFavorites, toggleFavorite }) => {
+            const [bursaries, setBursaries] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/bursaries')
+                    .then(res => res.json())
+                    .then(data => {
+                        setBursaries(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching bursaries:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn' },
+                bursaries.map(item => e(BursaryCard, { key: item.id, item, userFavorites, toggleFavorite }))
+            );
+        };
+
+        const BursaryCard = ({ item, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`bursary_${item.id}`);
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col relative group' },
+                item.picture_path && e('img', { src: `/${item.picture_path}`, className: 'w-16 h-16 absolute top-4 right-4 object-cover rounded-full border-2 border-gray-600' }),
+                e('div', { className: 'flex justify-between items-start pr-20' },
+                    e('h3', { className: 'text-lg font-bold text-white group-hover:text-indigo-300 transition-colors' }, item.name),
+                ),
+                e('div', { className: 'absolute top-4 right-4 z-10' },
+                    e(FavoriteButton, { type: 'bursary', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('p', { className: 'text-sm text-gray-400 mb-4' }, item.provider),
+                e('div', { className: 'mt-auto space-y-2' },
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'book', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Field: '), item.field_of_study),
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'check-circle', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Eligibility: '), item.eligibility),
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'calendar', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Closing: '), item.closing_date),
+                    item.phone_number && e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Phone: '), item.phone_number),
+                    e('a', { href: item.link, target: '_blank', rel: 'noopener noreferrer', className: 'mt-4 text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-2 transition-colors' }, e('i', { 'data-lucide': 'globe', className: 'w-4 h-4' }), 'More Info')
+                )
+            );
+        };
+
+        const LearnershipsTab = ({ userFavorites, toggleFavorite }) => {
+            const [learnerships, setLearnerships] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/learnerships')
+                    .then(res => res.json())
+                    .then(data => {
+                        setLearnerships(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching learnerships:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn' },
+                learnerships.map(item => e(LearnershipCard, { key: item.id, item, userFavorites, toggleFavorite }))
+            );
+        };
+
+        const LearnershipCard = ({ item, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`learnership_${item.id}`);
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col relative group' },
+                item.picture_path && e('img', { src: `/${item.picture_path}`, className: 'w-16 h-16 absolute top-4 right-4 object-cover rounded-full border-2 border-gray-600' }),
+                e('div', { className: 'flex justify-between items-start pr-20' },
+                    e('h3', { className: 'text-lg font-bold text-white group-hover:text-indigo-300 transition-colors' }, item.title),
+                ),
+                e('div', { className: 'absolute top-4 right-4 z-10' },
+                    e(FavoriteButton, { type: 'learnership', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('p', { className: 'text-sm text-gray-400 mb-4' }, item.company),
+                e('div', { className: 'mt-auto space-y-2' },
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'dollar-sign', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Stipend: '), item.stipend ? `R${item.stipend}` : 'N/A'),
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'clock', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Duration: '), item.duration),
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'award', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'NQF: '), item.nqf_level),
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Location: '), item.location),
+                    item.phone_number && e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }), e('span', { className: 'font-semibold text-gray-300' }, 'Phone: '), item.phone_number),
+                    e('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'mt-4 text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-2 transition-colors' }, e('i', { 'data-lucide': 'globe', className: 'w-4 h-4' }), 'More Info')
+                )
+            );
+        };
+
+        const Header = ({ isMenuOpen, setIsMenuOpen, activeTab, setActiveTab }) => {
+            const isLoggedIn = session && session.user_id;
+
+            const authLinks = () => {
+                if (isLoggedIn) {
+                    const links = [
+                        e('a', { key: 'logout', href: '/api/logout', className: 'text-sm font-medium text-gray-700 hover:text-red-600 transition-colors' }, 'Logout')
+                    ];
+                    if (session.is_admin) {
+                        links.unshift(e('a', { key: 'admin', href: '/admin', className: 'text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1' },
+                            e('i', { 'data-lucide': 'shield-check', className: 'w-4 h-4' }), 'Admin Panel'
+                        ));
+                    }
+                    return links;
+                }
+                return [
+                    e('a', { key: 'login', href: '/login', className: 'text-sm font-medium text-gray-700 hover:text-blue-600' }, 'Login'),
+                    e('a', { key: 'register', href: '/register', className: 'bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700' }, 'Register')
+                ];
+            };
+
+            return e('header', { className: 'bg-white shadow-sm sticky top-0 z-50' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' },
+                    e('div', { className: 'flex justify-between items-center py-4' },
+                        e('a', { href: '/', className: 'flex items-center gap-2 cursor-pointer' },
+                            e('i', { 'data-lucide': 'feather', className: 'w-8 h-8 text-blue-600' }),
+                            e('span', { className: 'text-xl font-bold text-gray-900' }, 'SafeLearner.online')
+                        ),
+                        e('div', { className: 'hidden sm:flex sm:items-center sm:space-x-4' },
+                            e(TabButton, { label: 'News', icon: 'newspaper', activeTab, setActiveTab, tabName: 'news', isMobile: false }),
+                            e(TabButton, { label: 'Career Paths', icon: 'trending-up', activeTab, setActiveTab, tabName: 'career_paths', isMobile: false }),
+                        ),
+                        e('div', { className: 'hidden sm:flex items-center space-x-4' }, ...authLinks()),
+                        e('div', { className: 'sm:hidden' },
+                            e('button', { onClick: () => setIsMenuOpen(!isMenuOpen), type: 'button', className: 'inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500' },
+                                e('span', { className: 'sr-only' }, 'Open main menu'),
+                                isMenuOpen ? e('i', { 'data-lucide': 'x', className: 'block h-6 w-6' }) : e('i', { 'data-lucide': 'menu', className: 'block h-6 w-6' })
+                            )
+                        )
+                    )
+                ),
+                isMenuOpen && e('div', { className: 'sm:hidden' },
+                    e('div', { className: 'px-2 pt-2 pb-3 space-y-1' },
+                        e(TabButton, { label: 'News', icon: 'newspaper', activeTab, setActiveTab, tabName: 'news', isMobile: true, setIsMenuOpen }),
+                        e(TabButton, { label: 'Career Paths', icon: 'trending-up', activeTab, setActiveTab, tabName: 'career_paths', isMobile: true, setIsMenuOpen }),
+                        e('div', { className: 'border-t border-gray-200 mt-2 pt-2 space-y-1' }, ...authLinks().map(link => e('a', { ...link.props, className: `${link.props.className} block px-3 py-2` })))
+                    )
+                )
+            );
+        };
+
+        const SubNav = ({ activeTab, setActiveTab }) => {
+            const isCareerPathRelatedTab = ['career_paths', 'accommodation', 'tvet_colleges', 'setas', 'materials', 'profile', 'bursaries', 'learnerships', 'universities', 'training_providers', 'occupational_qualifications'].includes(activeTab);
+            const isLoggedIn = session && session.user_id;
+
+            if (!isCareerPathRelatedTab) {
+                return null;
+            }
+
+            return e('div', { className: 'bg-gray-100' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' },
+                    e('div', { className: 'relative' },
+                        e('div', { className: 'flex items-center space-x-4 overflow-x-auto whitespace-nowrap' },
+                            e(TabButton, { label: 'TVET Colleges', icon: 'building', activeTab, setActiveTab, tabName: 'tvet_colleges', isMobile: false }),
+                            e(TabButton, { label: 'Training Providers', icon: 'shield-check', activeTab, setActiveTab, tabName: 'training_providers', isMobile: false }),
+                            e(TabButton, { label: 'Occupational Qualifications', icon: 'award', activeTab, setActiveTab, tabName: 'occupational_qualifications', isMobile: false }),
+                            e(TabButton, { label: 'SETAs', icon: 'briefcase', activeTab, setActiveTab, tabName: 'setas', isMobile: false }),
+                            e(TabButton, { label: 'Universities', icon: 'graduation-cap', activeTab, setActiveTab, tabName: 'universities', isMobile: false }),
+                            e(TabButton, { label: 'Bursaries', icon: 'wallet', activeTab, setActiveTab, tabName: 'bursaries', isMobile: false }),
+                            e(TabButton, { label: 'Learnerships', icon: 'award', activeTab, setActiveTab, tabName: 'learnerships', isMobile: false }),
+                            e(TabButton, { label: 'Materials', icon: 'book-open', activeTab, setActiveTab, tabName: 'materials', isMobile: false }),
+                            e(TabButton, { label: 'Accommodation', icon: 'home', activeTab, setActiveTab, tabName: 'accommodation', isMobile: false }),
+                            isLoggedIn && e('a', { href: '/profile', className: 'inline-flex items-center gap-2 whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm transition-colors border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-600' }, e('i', { 'data-lucide': 'user', className: 'w-5 h-5' }), 'Profile')
+                        )
+                    )
+                )
+            );
+        };
+
+        const UniversityTab = ({ userFavorites, toggleFavorite }) => {
+            const [universities, setUniversities] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                let isMounted = true;
+
+                fetch('/api/universities')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (isMounted) {
+                            setUniversities(data);
+                            setLoading(false);
+                        }
+                    })
+                    .catch(error => {
+                        if (isMounted) {
+                            console.error('Error fetching universities:', error);
+                            setLoading(false);
+                        }
+                    });
+
+                return () => {
+                    isMounted = false;
+                };
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            console.log(universities);
+            return e('div', { className: 'space-y-8 animate-fadeIn' },
+                Object.keys(universities).sort().map(province =>
+                    e('div', { key: province, className: 'p-6 bg-gray-800/30 border border-gray-700 rounded-xl' },
+                        e('h2', { className: 'text-2xl font-bold text-white mb-6 flex items-center gap-2' },
+                            e('i', { 'data-lucide': 'map-pin', className: 'w-6 h-6 text-indigo-400' }), province
+                        ),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            Array.isArray(universities[province]) && universities[province].map(item => e(UniversityCard, { key: item.id, item, userFavorites, toggleFavorite }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const UniversityCard = ({ item, userFavorites, toggleFavorite }) => {
+            const [expanded, setExpanded] = useState(false);
+            const isFavorited = userFavorites && userFavorites.has(`university_${item.id}`);
+
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                if (!/^(https?|ftp):\/\//i.test(url)) {
+                    return `http://${url}`;
+                }
+                return url;
+            };
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-bold text-white group-hover:text-indigo-300 transition-colors pr-8' }, item.university_name),
+                    e(FavoriteButton, { type: 'university', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'mt-4 space-y-3' },
+                    item.physical_address && e('div', { className: 'flex items-start gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5' }),
+                        e('span', null, item.physical_address)
+                    ),
+                    item.tel && e('div', { className: 'flex items-center gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.tel)
+                    ),
+                    item.email && e('div', { className: 'flex items-center gap-3 text-sm text-gray-400' },
+                        e('i', { 'data-lucide': 'mail', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.email)
+                    ),
+                    item.website && e('div', { className: 'flex items-center gap-3 text-sm mb-4' },
+                        e('i', { 'data-lucide': 'globe', className: 'w-4 h-4 text-gray-500' }),
+                        e('a', { href: formatUrl(item.website), target: '_blank', rel: 'noopener noreferrer', className: 'text-indigo-400 hover:text-indigo-300 hover:underline transition-colors' }, 'Website')
+                    )
+                ),
+
+                // Specialties & Courses (Collapsible)
+                expanded && e('div', { className: 'mt-4 pt-4 border-t border-gray-700 space-y-3 animate-fadeIn' },
+                    item.specialties && e('div', null,
+                        e('h4', { className: 'text-sm font-semibold text-gray-300 mb-1' }, 'Specialties'),
+                        e('p', { className: 'text-sm text-gray-400 leading-relaxed' }, item.specialties)
+                    ),
+                    item.courses && e('div', null,
+                        e('h4', { className: 'text-sm font-semibold text-gray-300 mb-1' }, 'Top Courses'),
+                        e('p', { className: 'text-sm text-gray-400 leading-relaxed italic' }, item.courses)
+                    )
+                ),
+
+                e('button', {
+                    onClick: () => setExpanded(!expanded),
+                    className: 'mt-auto w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2'
+                },
+                    expanded ? 'Show Less' : 'View Specialties & Courses',
+                    e('i', { 'data-lucide': expanded ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' })
+                )
+            );
+        };
+
+
+        const TrainingProvidersTab = ({ userFavorites, toggleFavorite }) => {
+            const [providers, setProviders] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/training-providers')
+                    .then(res => res.json())
+                    .then(data => {
+                        setProviders(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching training providers:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-500' }, 'Loading...');
+            }
+
+            return e('div', { className: 'space-y-8 animate-fadeIn' },
+                Object.keys(providers).sort().map(province =>
+                    e('div', { key: province, className: 'p-6 bg-gray-800/30 border border-gray-700 rounded-xl' },
+                        e('h2', { className: 'text-2xl font-bold text-white mb-6 flex items-center gap-2' },
+                            e('i', { 'data-lucide': 'map-pin', className: 'w-6 h-6 text-indigo-400' }), province
+                        ),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            providers[province].map(item => e(TrainingProviderCard, { key: item.id, item, userFavorites, toggleFavorite }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const TrainingProviderCard = ({ item, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`school_${item.id}`);
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group relative' },
+                e('div', { className: 'absolute top-4 right-4 z-10' },
+                    e(FavoriteButton, { type: 'school', id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('div', { className: 'flex items-center gap-3 mb-4' },
+                    e('div', { className: 'p-2 bg-green-500/10 rounded-lg' },
+                        e('i', { 'data-lucide': 'check-circle', className: 'w-6 h-6 text-green-400' })
+                    ),
+                    e('span', { className: 'text-xs font-semibold text-green-400 uppercase tracking-wide px-2 py-1 bg-green-500/10 rounded-md border border-green-500/20' }, 'Legit')
+                ),
+                e('h3', { className: 'text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors pr-8' }, item.school_name),
+                e('div', { className: 'space-y-2 mb-4' },
+                    e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' }, e('i', { 'data-lucide': 'hash', className: 'w-4 h-4' }), item.accreditation_number),
+                    (item.province || item.city) && e('p', { className: 'text-sm text-gray-400 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4' }),
+                        [item.city, item.province].filter(Boolean).join(', ')
+                    )
+                ),
+                e('div', { className: 'mt-auto pt-4 border-t border-gray-700' },
+                    e('div', { className: 'flex items-center justify-between text-xs text-gray-500' },
+                        e('span', null, 'Registration Status:'),
+                        e('span', { className: 'text-green-400 font-medium' }, 'Active')
+                    )
+                )
+            );
+        };
+
+        const OccupationalQualsTab = ({ userFavorites, toggleFavorite }) => {
+            const [data, setData] = useState({ qualifications: [], skills_programmes: [] });
+            const [loading, setLoading] = useState(true);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            useEffect(() => {
+                fetch('/api/occupational-qualifications')
+                    .then(res => res.json())
+                    .then(res => {
+                        setData(res);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching occupational qualifications:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading, searchTerm]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8 text-gray-400' }, 'Loading...');
+            }
+
+            const filteredQuals = data.qualifications.filter(q =>
+                q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (q.saqa_id && q.saqa_id.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+
+            const filteredSkills = data.skills_programmes.filter(s =>
+                s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (s.programme_id && s.programme_id.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+
+            return e('div', { className: 'space-y-8 animate-fadeIn' },
+                e('div', { className: 'relative max-w-2xl mx-auto mb-12' },
+                    e('div', { className: 'absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none' },
+                        e('i', { 'data-lucide': 'search', className: 'h-5 w-5 text-gray-400' })
+                    ),
+                    e('input', {
+                        type: 'text',
+                        placeholder: 'Search by title, SAQA ID or Programme ID...',
+                        value: searchTerm,
+                        onChange: (e) => setSearchTerm(e.target.value),
+                        className: 'block w-full pl-11 pr-4 py-4 border border-gray-700/50 rounded-2xl leading-5 bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 sm:text-base transition-all shadow-xl backdrop-blur-sm'
+                    })
+                ),
+                filteredQuals.length > 0 && e('div', null,
+                    e('h2', { className: 'text-2xl font-bold text-white mb-6 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'graduation-cap', className: 'w-6 h-6 text-indigo-400' }), 'Qualifications',
+                        e('span', { className: 'text-sm font-normal text-gray-500 ml-2' }, `(${filteredQuals.length})`)
+                    ),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                        filteredQuals.map(item => e(QualCard, { key: `qual_${item.id}`, item, type: 'qualification', userFavorites, toggleFavorite }))
+                    )
+                ),
+                filteredSkills.length > 0 && e('div', null,
+                    e('h2', { className: 'text-2xl font-bold text-white mb-6 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'award', className: 'w-6 h-6 text-green-400' }), 'Skill Programmes',
+                        e('span', { className: 'text-sm font-normal text-gray-500 ml-2' }, `(${filteredSkills.length})`)
+                    ),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                        filteredSkills.map(item => e(QualCard, { key: `skill_${item.id}`, item, type: 'skill', userFavorites, toggleFavorite }))
+                    )
+                ),
+                filteredQuals.length === 0 && filteredSkills.length === 0 && e('div', { className: 'text-center py-20 bg-gray-800/20 border border-dashed border-gray-700 rounded-3xl' },
+                    e('div', { className: 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800/50 mb-4' },
+                        e('i', { 'data-lucide': 'search-x', className: 'w-8 h-8 text-gray-500' })
+                    ),
+                    e('p', { className: 'text-lg text-gray-400' }, 'No results found for "', e('span', { className: 'text-white' }, searchTerm), '"'),
+                    e('button', {
+                        onClick: () => setSearchTerm(''),
+                        className: 'mt-4 text-indigo-400 hover:text-indigo-300 font-medium'
+                    }, 'Clear all filters')
+                )
+            );
+        };
+
+        const QualCard = ({ item, type, userFavorites, toggleFavorite }) => {
+            const isFavorited = userFavorites && userFavorites.has(`${type}_${item.id}`);
+            const idLabel = type === 'qualification' ? 'SAQA ID' : 'Prog ID';
+            const itemId = type === 'qualification' ? item.saqa_id : item.programme_id;
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg hover:border-indigo-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col group relative' },
+                e('div', { className: 'absolute top-4 right-4 z-10' },
+                    e(FavoriteButton, { type, id: item.id, isFavorited, onToggle: toggleFavorite })
+                ),
+                e('h3', { className: 'text-lg font-bold text-white mb-3 group-hover:text-indigo-300 transition-colors pr-8' }, item.title),
+                e('div', { className: 'space-y-2 mb-4' },
+                    e('div', { className: 'flex items-center justify-between text-sm' },
+                        e('span', { className: 'text-gray-400 flex items-center gap-1.5' }, e('i', { 'data-lucide': 'hash', className: 'w-3.5 h-3.5' }), idLabel),
+                        e('span', { className: 'text-gray-300 font-mono' }, itemId)
+                    ),
+                    e('div', { className: 'flex items-center justify-between text-sm' },
+                        e('span', { className: 'text-gray-400 flex items-center gap-1.5' }, e('i', { 'data-lucide': 'bar-chart-2', className: 'w-3.5 h-3.5' }), 'NQF Level'),
+                        e('span', { className: 'text-indigo-400 font-medium' }, item.nqf_level)
+                    ),
+                    e('div', { className: 'flex items-center justify-between text-sm' },
+                        e('span', { className: 'text-gray-400 flex items-center gap-1.5' }, e('i', { 'data-lucide': 'check-square', className: 'w-3.5 h-3.5' }), 'Credits'),
+                        e('span', { className: 'text-gray-300' }, item.credits)
+                    )
+                ),
+                item.quality_partner && e('div', { className: 'mt-auto pt-4 border-t border-gray-700 text-xs text-gray-500 italic' },
+                    item.quality_partner
+                )
+            );
+        };
+
+
+        const Footer = () => {
+            return e('footer', { className: 'bg-gray-800 text-white py-8 mt-12' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center' },
+                    e('div', { className: 'mb-4' },
+                        e('a', { href: '/', className: 'flex items-center justify-center gap-2 text-xl font-bold text-white hover:text-blue-400 transition-colors' },
+                            e('i', { 'data-lucide': 'feather', className: 'w-6 h-6' }),
+                            e('span', null, 'SafeLearner.online')
+                        )
+                    ),
+                    e('div', { className: 'flex justify-center space-x-6 mb-6' },
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'About'),
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'Privacy Policy'),
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'Terms of Service')
+                    ),
+                    e('p', { className: 'text-gray-500 text-sm' }, '© 2023 SafeLearner.online. All rights reserved.')
+                )
+            );
+        };
+
+        // --- Main App Component ---
+        function App() {
+            const [searchQuery, setSearchQuery] = useState('');
+            const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
+            const [searchResults, setSearchResults] = useState([]);
+            const [schoolResults, setSchoolResults] = useState([]);
+            const [activeTab, setActiveTab] = useState('news');
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [userFavorites, setUserFavorites] = useState(new Set());
+            const [showHomePage, setShowHomePage] = useState(true);
+
+            // Track when user navigates away from homepage
+            const handleTabChange = (newTab) => {
+                setActiveTab(newTab);
+                if (newTab !== 'news' || !showHomePage) {
+                    setShowHomePage(false);
+                }
+            };
+
+            useEffect(() => {
+                if (session.user_id) {
+                    fetch(`/api/users/${session.user_id}/favorites`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const newFavorites = new Set(data.map(f => `${f.item_type}_${f.item_id}`));
+                            setUserFavorites(newFavorites);
+                        })
+                        .catch(console.error);
+                }
+            }, []);
+
+            const toggleFavorite = (type, id) => {
+                const key = `${type}_${id}`;
+                const isFavorited = userFavorites.has(key);
+                const method = isFavorited ? 'DELETE' : 'POST';
+                const url = isFavorited ? `/api/favorites/${type}/${id}` : '/api/favorites';
+                const body = isFavorited ? null : JSON.stringify({ item_type: type, item_id: id });
+
+                return fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            setUserFavorites(prev => {
+                                const next = new Set(prev);
+                                if (isFavorited) next.delete(key);
+                                else next.add(key);
+                                return next;
+                            });
+                        } else {
+                            if (res.status === 409) { // Already favorited conflict, just add to state
+                                setUserFavorites(prev => new Set(prev).add(key));
+                            } else {
+                                throw new Error('Failed to update favorite');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error toggling favorite:', error);
+                        alert("Failed to update favorite. Please try again.");
+                    });
+            };
+
+            // Debounce search queries
+            useEffect(() => {
+                const handler = setTimeout(() => {
+                    if (searchQuery.trim()) {
+                        fetch(`/api/search?q=${searchQuery}`)
+                            .then(res => res.json())
+                            .then(data => setSearchResults(data))
+                            .catch(console.error);
+                    } else {
+                        setSearchResults([]);
+                    }
+                }, 300); // 300ms delay
+
+                return () => {
+                    clearTimeout(handler);
+                };
+            }, [searchQuery]);
+
+            useEffect(() => {
+                const handler = setTimeout(() => {
+                    if (schoolSearchQuery.trim()) {
+                        fetch(`/api/schools?q=${schoolSearchQuery}`)
+                            .then(res => res.json())
+                            .then(data => setSchoolResults(data))
+                            .catch(console.error);
+                    } else {
+                        setSchoolResults([]);
+                    }
+                }, 300);
+
+                return () => {
+                    clearTimeout(handler);
+                };
+            }, [schoolSearchQuery]);
+
+            const renderTabContent = () => {
+                const props = { userFavorites, toggleFavorite };
+                switch (activeTab) {
+                    case 'search':
+                    case 'verify':
+                        return null; // Search bars are now above the hero
+                    case 'accommodation':
+                        return React.createElement(AccommodationTab, props);
+                    case 'tvet_colleges':
+                        return React.createElement(TvetCollegesTab, props);
+                    case 'setas':
+                        return React.createElement(SetasTab, props);
+                    case 'news':
+                        // Show homepage video sections on initial load, news posts when user clicks News button
+                        return showHomePage
+                            ? React.createElement(WelcomeVideoSections, { setActiveTab: handleTabChange })
+                            : React.createElement(NewsTab, { setActiveTab: handleTabChange });
+                    case 'career_paths':
+                        return React.createElement(CareerPathsTab, props);
+                    case 'materials':
+                        return e('div', { className: 'p-8 bg-gray-800 border border-gray-700 rounded-xl shadow-lg animate-fadeIn' },
+                            e('h2', { className: 'text-2xl font-bold mb-6 text-white flex items-center gap-2' },
+                                e('i', { 'data-lucide': 'book-open', className: 'w-6 h-6 text-indigo-400' }), 'Learner Materials & Useful Links'
+                            ),
+                            e('ul', { className: 'space-y-4' },
+                                e('li', { className: 'flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700/50 hover:bg-gray-700/50 transition-colors' },
+                                    e('div', { className: 'bg-indigo-500/10 p-2 rounded-lg' },
+                                        e('i', { 'data-lucide': 'globe', className: 'w-5 h-5 text-indigo-400' })
+                                    ),
+                                    e('a', { href: 'https://www.qcto.org.za/', target: '_blank', className: 'text-gray-300 hover:text-white font-medium transition-colors' }, 'Official QCTO Website')
+                                ),
+                                e('li', { className: 'flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700/50 hover:bg-gray-700/50 transition-colors' },
+                                    e('div', { className: 'bg-indigo-500/10 p-2 rounded-lg' },
+                                        e('i', { 'data-lucide': 'globe', className: 'w-5 h-5 text-indigo-400' })
+                                    ),
+                                    e('a', { href: 'https://www.saqa.org.za/', target: '_blank', className: 'text-gray-300 hover:text-white font-medium transition-colors' }, 'SAQA (South African Qualifications Authority)')
+                                ),
+                                e('li', { className: 'flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700/50 hover:bg-gray-700/50 transition-colors' },
+                                    e('div', { className: 'bg-indigo-500/10 p-2 rounded-lg' },
+                                        e('i', { 'data-lucide': 'globe', className: 'w-5 h-5 text-indigo-400' })
+                                    ),
+                                    e('a', { href: 'https://www.nsfas.org.za/', target: '_blank', className: 'text-gray-300 hover:text-white font-medium transition-colors' }, 'NSFAS (National Student Financial Aid Scheme)')
+                                )
+                            )
+                        );
+                    case 'bursaries':
+                        return React.createElement(BursaryScholarshipTab, props);
+                    case 'learnerships':
+                        return React.createElement(LearnershipsTab, props);
+                    case 'universities':
+                        return React.createElement(UniversityTab, props);
+                    case 'training_providers':
+                        return React.createElement(TrainingProvidersTab, props);
+                    case 'occupational_qualifications':
+                        return React.createElement(OccupationalQualsTab, props);
+                    default:
+                        return null;
+                }
+            };
+
+            const isCareerPathRelatedTab = ['career_paths', 'accommodation', 'tvet_colleges', 'setas', 'materials', 'profile', 'bursaries', 'learnerships', 'universities', 'training_providers', 'occupational_qualifications'].includes(activeTab);
+
+            return e('div', { className: 'min-h-screen flex flex-col' },
+                e(Header, { isMenuOpen, setIsMenuOpen, activeTab, setActiveTab: handleTabChange }),
+                e(SubNav, { activeTab, setActiveTab: handleTabChange }),
+                e('main', { className: 'flex-grow w-full' },
+                    (activeTab === 'search' || activeTab === 'verify') && e('div', { className: 'bg-white py-8' },
+                        e('div', { className: 'max-w-4xl mx-auto px-4 sm:px-6 lg:px-8' },
+                            activeTab === 'search' ?
+                                React.createElement(SearchTab, { searchQuery, setSearchQuery, userFavorites, toggleFavorite }) :
+                                React.createElement(VerifyTab, { schoolSearchQuery, setSchoolSearchQuery, userFavorites, toggleFavorite }),
+
+                            activeTab === 'search' ?
+                                e(SearchResults, { results: searchResults, userFavorites, toggleFavorite }) :
+                                e(SchoolResults, { results: schoolResults, userFavorites, toggleFavorite })
+                        )
+                    ),
+                    !isMenuOpen && !isCareerPathRelatedTab && activeTab !== 'search' && activeTab !== 'verify' && showHomePage && e(Hero),
+                    e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8' },
+                        e('div', { className: 'mt-8' }, renderTabContent())
+                    )
+                ),
+                e(Footer)
+            );
+        }
+
+        const LucideIcon = ({ name, className }) => {
+            if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) {
+                return e('i', { 'data-lucide': name, className });
+            }
+            const svgHtml = window.lucide.icons[name].toSvg({ class: className });
+            return e('span', {
+                dangerouslySetInnerHTML: { __html: svgHtml },
+                className: "inline-flex items-center justify-center"
+            });
+        };
+
+        const FavoriteButton = ({ type, id, isFavorited, onToggle }) => {
+            const [loading, setLoading] = useState(false);
+
+            const handleClick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
+
+                if (loading) return;
+
+                if (!session || !session.user_id) {
+                    alert("Please login to save favorites.");
+                    return;
+                }
+
+                setLoading(true);
+                onToggle(type, id)
+                    .finally(() => setLoading(false));
+            };
+
+            return e('button', {
+                type: 'button',
+                onClick: handleClick,
+                className: `p-2 rounded-full transition-all duration-200 ${isFavorited
+                    ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                    }`,
+                title: isFavorited ? 'Remove from favorites' : 'Add to favorites'
+            },
+                loading
+                    ? e('div', { className: 'w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin' })
+                    : e('svg', {
+                        xmlns: "http://www.w3.org/2000/svg",
+                        width: "24",
+                        height: "24",
+                        viewBox: "0 0 24 24",
+                        fill: isFavorited ? "currentColor" : "none",
+                        stroke: "currentColor",
+                        strokeWidth: "2",
+                        strokeLinecap: "round",
+                        strokeLinejoin: "round",
+                        className: `w-5 h-5 ${isFavorited ? 'text-red-500' : ''}` // Ensure red color when filled
+                    }, e('path', { d: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" }))
+            );
+        };
+
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null, errorInfo: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                this.setState({ error, errorInfo });
+                console.error("Uncaught error:", error, errorInfo);
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return e('div', { className: 'p-8 text-white bg-red-900 min-h-screen' },
+                        e('h1', { className: 'text-2xl font-bold mb-4' }, 'Something went wrong.'),
+                        e('details', { className: 'whitespace-pre-wrap font-mono text-sm' },
+                            this.state.error && this.state.error.toString(),
+                            e('br'),
+                            this.state.errorInfo && this.state.errorInfo.componentStack
+                        )
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        ReactDOM.render(e(ErrorBoundary, null, e(App)), document.getElementById('root'));
+    </script>
+</body>
+
+</html>

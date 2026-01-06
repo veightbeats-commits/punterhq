@@ -1,0 +1,22 @@
+venv
+__pycache__
+*.pyc
+accommodations.csv
+accredited schools.csv
+"Registered Quals & Part-Reg Quals with SAQA links.csv"
+SETAs.csv
+"skill programes.csv"
+"Tvet Colleges.csv"
+university_info.csv
+.git
+.gitignore
+README.md
+gemini.md.txt
+New Text Document.txt
+update_db_v2.py
+update_db_v3.py
+update_db_v4.py
+update_db.py
+update_tvet.py
+"WhatsApp Image 2026-01-03 at 03.29.26.jpeg"
+.venv

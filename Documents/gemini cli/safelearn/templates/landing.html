@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="SafeLearn - Empowering South African learners with comprehensive career guidance, qualifications, and educational opportunities.">
+    <title>SafeLearn - Your Gateway to Educational Excellence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">SafeLearn</a>
+            <ul class="nav-links">
+                <li><a href="#hero" class="nav-link">Home</a></li>
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#learning" class="nav-link">Learning</a></li>
+                <li><a href="#career" class="nav-link">Career</a></li>
+                <li><a href="#community" class="nav-link">Community</a></li>
+            </ul>
+            <a href="/" class="nav-cta">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="section hero">
+        <div class="section-container">
+            <div class="section-content">
+                <h1 class="hero-title">Welcome to SafeLearn</h1>
+                <p class="hero-subtitle">
+                    Your comprehensive platform for educational excellence in South Africa.
+                    Discover qualifications, career paths, and opportunities tailored just for you.
+                </p>
+                <div class="hero-cta">
+                    <a href="/" class="btn btn-primary">Explore Platform</a>
+                    <a href="#features" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="section-video">
+                <div class="video-wrapper float-animation">
+                    <img src="https://images.unsplash.com/photo-1546410531-bb448c5b0586?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Students in a classroom, welcoming new students">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section features">
+        <div class="section-container">
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1549923746-c502d480e1d4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Teacher presenting to students">
+                </div>
+            </div>
+            <div class="section-content">
+                <h2>Powerful Features for Your Success</h2>
+                <p>
+                    SafeLearn offers a comprehensive suite of tools designed to help you navigate
+                    your educational journey with confidence and clarity.
+                </p>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Qualifications Database</h3>
+                        <p>Access thousands of accredited qualifications and skills programmes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🏫</div>
+                        <h3>Training Providers</h3>
+                        <p>Find accredited schools, TVET colleges, and universities near you.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💼</div>
+                        <h3>Career Guidance</h3>
+                        <p>Get personalized career recommendations based on your interests.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <h3>Bursaries & Funding</h3>
+                        <p>Discover financial aid opportunities to support your education.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Section -->
+    <section id="learning" class="section learning">
+        <div class="section-container">
+            <div class="section-content">
+                <h2>Learn at Your Own Pace</h2>
+                <p>
+                    Our platform is designed to support your learning journey, whether you're
+                    exploring career options, searching for qualifications, or planning your
+                    educational path.
+                </p>
+                <p>
+                    With comprehensive resources and intuitive search tools, finding the right
+                    educational opportunity has never been easier. Browse through our extensive
+                    database of qualifications, skills programmes, and training providers.
+                </p>
+                <div style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary">Start Learning</a>
+                </div>
+            </div>
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Student reading a book">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Innovation Section -->
+    <section id="innovation" class="section innovation">
+        <div class="section-container">
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1557804506-699c264b38d7?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Lightbulb over books, symbolizing ideas and innovation in education">
+                </div>
+            </div>
+            <div class="section-content">
+                <h2>Innovation in Education</h2>
+                <p>
+                    We're revolutionizing how South African learners discover and access
+                    educational opportunities. Our AI-powered career guidance tool, "The Mind,"
+                    provides personalized recommendations based on your unique profile.
+                </p>
+                <p>
+                    Explore innovative features like location-based matching for accommodations,
+                    learnerships, and bursaries. Get connected with opportunities in your province
+                    and discover pathways to success.
+                </p>
+                <div style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary">Discover Innovation</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Section -->
+    <section id="success" class="section success">
+        <div class="section-container">
+            <div class="section-content">
+                <h2>Your Success is Our Mission</h2>
+                <p>
+                    Join thousands of learners who have found their path to success through SafeLearn.
+                    Our platform has helped students discover qualifications, secure bursaries, and
+                    connect with training providers across South Africa.
+                </p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Qualifications</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Training Providers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Bursaries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">9</div>
+                        <div class="stat-label">Provinces Covered</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Graduating students celebrating success">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Section -->
+    <section id="community" class="section community">
+        <div class="section-container">
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1509062560249-1456209e5309?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Happy diverse group of students collaborating">
+                </div>
+            </div>
+            <div class="section-content">
+                <h2>Join Our Thriving Community</h2>
+                <p>
+                    Connect with fellow learners, share experiences, and support each other on
+                    your educational journeys. Our community features include blog posts, comments,
+                    and reviews to help you make informed decisions.
+                </p>
+                <p>
+                    Share your success stories, ask questions, and learn from others who have
+                    walked the path before you. Together, we're building a supportive ecosystem
+                    for educational excellence in South Africa.
+                </p>
+                <div style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary">Join Community</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Career Section -->
+    <section id="career" class="section career">
+        <div class="section-container">
+            <div class="section-content">
+                <h2>Discover Your Career Path</h2>
+                <p>
+                    Our intelligent career guidance system, "The Mind," helps you explore career
+                    options based on your interests, skills, and location. Get personalized
+                    recommendations for qualifications, training providers, and opportunities.
+                </p>
+                <p>
+                    Whether you're interested in engineering, healthcare, business, or the arts,
+                    we'll help you find the right path. Explore SETAs, learnerships, and
+                    apprenticeships tailored to your career goals.
+                </p>
+                <div style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary">Explore Careers</a>
+                </div>
+            </div>
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1510590494490-b184e954c25f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Person contemplating career options">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="section cta">
+        <div class="section-container">
+            <div class="section-content">
+                <h2>Ready to Start Your Journey?</h2>
+                <p>
+                    Join SafeLearn today and unlock a world of educational opportunities.
+                    Your future starts here!
+                </p>
+                <div style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary">Get Started Now</a>
+                </div>
+            </div>
+            <div class="section-video">
+                <div class="video-wrapper">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Excited students celebrating a new journey">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Smooth Scroll Script -->
+    <script>
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        let lastScroll = 0;
+        const nav = document.querySelector('.nav');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 100) {
+                nav.style.background = 'rgba(15, 15, 30, 0.95)';
+                nav.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+            } else {
+                nav.style.background = 'rgba(15, 15, 30, 0.8)';
+                nav.style.boxShadow = 'none';
+            }
+
+            lastScroll = currentScroll;
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all section content
+        document.querySelectorAll('.section-content, .section-video').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+
+</html>

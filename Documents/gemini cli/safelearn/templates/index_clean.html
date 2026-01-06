@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLearn - QCTO Verified</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script>
+        // Pass backend session data to the frontend
+        const session = JSON.parse('{{ session | tojson | safe }}');
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+
+        const e = React.createElement;
+        const { useState, useEffect } = React;
+
+        const renderTextWithLinks = (text) => {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const parts = text.split(urlRegex);
+            return parts.map((part, index) => {
+                if (part.match(urlRegex)) {
+                    return e('a', { key: index, href: part, target: '_blank', rel: 'noopener noreferrer', className: 'text-blue-500 hover:underline' }, part);
+                }
+                return part;
+            });
+        };
+
+        // Minimal Star Rating Component (Display Only)
+        const StarRating = ({ rating }) => {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 !== 0;
+
+            return e('div', { className: 'flex' },
+                [...Array(5)].map((_, i) => e('svg', { 
+                    key: `full-${i}`, 
+                    className: 'w-5 h-5 text-yellow-400', 
+                    fill: 'currentColor', 
+                    viewBox: '0 0 20 20' 
+                }, e('path', { d: 'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z' }))),
+                hasHalfStar && e('svg', { 
+                    key: 'half', 
+                    className: 'w-5 h-5 text-yellow-400', 
+                    fill: 'currentColor', 
+                    viewBox: '0 0 20 20' 
+                }, e('path', { d: 'M10 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z' })))
+            );
+        };
+
+        const EditableStarRating = ({ rating, setRating }) => { /* Kept for ReviewForm re-introduction */
+            return e('div', { className: 'flex' },
+                [...Array(5)].map((_, i) => {
+                    const starValue = i + 1;
+                    return e('svg', { 
+                        key: starValue, 
+                        className: `w-5 h-5 ${starValue <= rating ? 'text-yellow-400' : 'text-gray-300'} cursor-pointer`, 
+                        fill: 'currentColor', 
+                        viewBox: '0 0 20 20',
+                        onClick: () => setRating(starValue)
+                    }, 
+                        e('path', { d: 'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z' })
+                    );
+                })
+            );
+        };
+
+        // Review Form Component - Placeholder for re-introduction
+        const ReviewForm = () => { /* Placeholder: No functionality yet */ return e('div', null, "Review Form Placeholder"); };
+        // Review List Component - Placeholder for re-introduction
+        const ReviewList = () => { /* Placeholder: No functionality yet */ return e('div', null, "Review List Placeholder"); };
+
+        // Bursaries Tab Component - Placeholder for re-introduction
+        const BursariesTab = () => { /* Placeholder: No functionality yet */ return e('div', null, "Bursaries Tab Placeholder"); };
+        const BursaryCard = ({ item }) => { /* Placeholder: No functionality yet */ return e('div', null, e('h3', null, item.name), "Bursary Card Placeholder"); };
+
+        // Career Paths Tab Component - Placeholder for re-introduction
+        const CareerPathsTab = () => { /* Placeholder: No functionality yet */ return e('div', null, "Career Paths Tab Placeholder"); };
+        const CareerPathCard = ({ item }) => { /* Placeholder: No functionality yet */ return e('div', null, e('h3', null, item.career_name), "Career Path Card Placeholder"); };
+        
+        // Forum Tab Component - Placeholder for re-introduction
+        const ForumTab = () => { /* Placeholder: No functionality yet */ return e('div', null, "Forum Tab Placeholder"); };
+        const QuestionForm = () => { /* Placeholder: No functionality yet */ return e('div', null, "Question Form Placeholder"); };
+        const AnswerForm = () => { /* Placeholder: No functionality yet */ return e('div', null, "Answer Form Placeholder"); };
+        const QuestionCard = ({ question }) => { /* Placeholder: No functionality yet */ return e('div', null, e('h3', null, question.title), "Question Card Placeholder"); };
+
+
+        function App() {
+            const [searchQuery, setSearchQuery] = useState('');
+            const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
+            const [searchResults, setSearchResults] = useState([]);
+            const [schoolResults, setSchoolResults] = useState([]);
+            const [activeTab, setActiveTab] = useState('news');
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+            // Debounce search queries
+            useEffect(() => {
+                const handler = setTimeout(() => {
+                    if (searchQuery.trim()) {
+                        fetch(`/api/search?q=${searchQuery}`)
+                            .then(res => res.json())
+                            .then(data => setSearchResults(data))
+                            .catch(console.error);
+                    } else {
+                        setSearchResults([]);
+                    }
+                }, 300); // 300ms delay
+
+                return () => {
+                    clearTimeout(handler);
+                };
+            }, [searchQuery]);
+            
+            useEffect(() => {
+                const handler = setTimeout(() => {
+                    if (schoolSearchQuery.trim()) {
+                        fetch(`/api/schools?q=${schoolSearchQuery}`)
+                            .then(res => res.json())
+                            .then(data => setSchoolResults(data))
+                            .catch(console.error);
+                    } else {
+                        setSchoolResults([]);
+                    }
+                }, 300);
+
+                return () => {
+                    clearTimeout(handler);
+                };
+            }, [schoolSearchQuery]);
+
+            const renderTabContent = () => {
+                switch (activeTab) {
+                    case 'search':
+                    case 'verify':
+                        return null; // Search bars are now above the hero
+                    case 'accommodation':
+                        return React.createElement(AccommodationTab);
+                    case 'tvet_colleges':
+                        return React.createElement(TvetCollegesTab);
+                    case 'setas':
+                        return React.createElement(SetasTab);
+                    case 'bursaries':
+                        return React.createElement(BursariesTab);
+                    case 'career_paths':
+                        return React.createElement(CareerPathsTab);
+                    case 'forum': // Added back for testing
+                        return React.createElement(ForumTab); // Added back for testing
+                    case 'news':
+                        return React.createElement(NewsTab);
+                    case 'materials':
+                        return e('div', { className: 'p-8 bg-white rounded-lg shadow' }, 
+                            e('h2', {className: 'text-2xl font-bold mb-4'}, 'Learner Materials & Useful Links'),
+                            e('ul', {className: 'list-disc list-inside space-y-2'},
+                                e('li', null, e('a', {href: 'https://www.qcto.org.za/', target: '_blank', className: 'text-blue-600 hover:underline'}, 'Official QCTO Website')),
+                                e('li', null, e('a', {href: 'https://www.saqa.org.za/', target: '_blank', className: 'text-blue-600 hover:underline'}, 'SAQA (South African Qualifications Authority)')),
+                                e('li', null, e('a', {href: 'https://www.nsfas.org.za/', target: '_blank', className: 'text-blue-600 hover:underline'}, 'NSFAS (National Student Financial Aid Scheme)'))
+                            )
+                        );
+                    default:
+                        return null;
+                }
+            };
+
+            return e('div', { className: 'min-h-screen flex flex-col' },
+                e(Header, { isMenuOpen, setIsMenuOpen, activeTab, setActiveTab }),
+                e('main', { className: 'flex-grow w-full' },
+                    (activeTab === 'search' || activeTab === 'verify') && e('div', { className: 'bg-white py-8' },
+                        e('div', { className: 'max-w-4xl mx-auto px-4 sm:px-6 lg:px-8' },
+                            activeTab === 'search' ?
+                                React.createElement(SearchTab, { searchQuery, setSearchQuery }) :
+                                React.createElement(VerifyTab, { schoolSearchQuery, setSchoolSearchQuery }),
+                            
+                            activeTab === 'search' ?
+                                e(SearchResults, { results: searchResults }) :
+                                e(SchoolResults, { results: schoolResults })
+                        )
+                    ),
+                    !isMenuOpen && e(Hero),
+                    e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8' },
+                        e('div', { className: 'mt-8' }, renderTabContent())
+                    )
+                ),
+                e(Footer)
+            );
+        }
+
+        const SetasTab = () => {
+            const [setas, setSetas] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/setas')
+                    .then(res => res.json())
+                    .then(data => {
+                        setSetas(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching setas:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8' }, 'Loading...');
+            }
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                setas.map(item => e(SetaCard, { key: item.id, item }))
+            );
+        };
+
+        const SetaCard = ({ item }) => {
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                if (!/^(https?|ftp):\/\//i.test(url)) {
+                    return `http://${url}`;
+                }
+                return url;
+            };
+            // Reviews and Favorites are temporarily disabled for debugging
+            // const [showReviews, setShowReviews] = useState(false);
+            // const [refreshReviews, setRefreshReviews] = useState(0); 
+            // const [isFavorited, setIsFavorited] = useState(false);
+            // useEffect(() => { /* ... */ }, [session.user_id, item.id]);
+            // const handleFavoriteToggle = async () => { /* ... */ };
+
+            return e('div', { className: 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-semibold text-gray-900' }, item.seta_name),
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'badge-check', className: 'w-5 h-5 text-blue-500' }),
+                        // session.user_id && e('button', { onClick: handleFavoriteToggle, className: 'text-gray-400 hover:text-red-500' },
+                        //     e('i', { 'data-lucide': isFavorited ? 'heart' : 'heart', className: `w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}` })
+                        // )
+                    )
+                ),
+                e('div', { className: 'mt-2 space-y-2' },
+                    item.physical_address && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }),
+                        e('span', null, item.physical_address)
+                    ),
+                    item.telephone && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.telephone)
+                    ),
+                    item.website && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'globe', className: 'w-4 h-4 text-gray-500' }),
+                        e('a', { href: formatUrl(item.website), target: '_blank', rel: 'noopener noreferrer', className: 'text-blue-600 hover:underline' }, 'Website')
+                    )
+                ),
+                // Reviews Section Temporarily Disabled
+                // e('div', { className: 'mt-4 pt-4 border-t border-gray-200' },
+                //     e('button', { onClick: () => setShowReviews(!showReviews), className: 'text-blue-600 hover:underline text-sm flex items-center gap-1' }, e('i', { 'data-lucide': showReviews ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' }), showReviews ? 'Hide Reviews' : 'Show Reviews'),
+                //     showReviews && e('div', null, e(ReviewList, { key: `review-list-${item.id}-${refreshReviews}`, itemId: item.id, itemType: 'seta' }), e(ReviewForm, { key: `review-form-${item.id}`, itemId: item.id, itemType: 'seta', onReviewSubmitted: () => setRefreshReviews(prev => prev + 1) }))
+                // )
+            );
+        };
+        
+        const TvetCollegesTab = () => {
+            const [colleges, setColleges] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/tvet-colleges')
+                    .then(res => res.json())
+                    .then(data => {
+                        setColleges(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching tvet colleges:', error);
+                        setLoading(false);
+                    });
+            }, []);
+            
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8' }, 'Loading...');
+            }
+
+            return e('div', { className: 'space-y-8' },
+                Object.keys(colleges).sort().map(province =>
+                    e('div', { key: province, className: 'p-6 bg-gray-100 rounded-lg' },
+                        e('h2', { className: 'text-2xl font-bold text-gray-800 mb-4' }, province),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            colleges[province].map(item => e(TvetCollegeCard, { key: item.id, item }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const TvetCollegeCard = ({ item }) => {
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                if (!/^(https?|ftp):\/\//i.test(url)) {
+                    return `http://${url}`;
+                }
+                return url;
+            };
+            // Reviews and Favorites are temporarily disabled for debugging
+            // const [showReviews, setShowReviews] = useState(false);
+            // const [refreshReviews, setRefreshReviews] = useState(0); 
+            // const [isFavorited, setIsFavorited] = useState(false);
+            // useEffect(() => { /* ... */ }, [session.user_id, item.id]);
+            // const handleFavoriteToggle = async () => { /* ... */ };
+
+            return e('div', { className: 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-semibold text-gray-900' }, item.college_name),
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'badge-check', className: 'w-5 h-5 text-blue-500' }),
+                        // session.user_id && e('button', { onClick: handleFavoriteToggle, className: 'text-gray-400 hover:text-red-500' },
+                        //     e('i', { 'data-lucide': isFavorited ? 'heart' : 'heart', className: `w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}` })
+                        // )
+                    )
+                ),
+                e('div', { className: 'mt-2 space-y-2' },
+                    item.physical_address && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500 flex-shrink-0' }),
+                        e('span', null, item.physical_address)
+                    ),
+                    item.tel && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'phone', className: 'w-4 h-4 text-gray-500' }),
+                        e('span', null, item.tel)
+                    ),
+                    item.web && e('div', { className: 'flex items-center gap-2 text-sm text-gray-700' },
+                        e('i', { 'data-lucide': 'globe', className: 'w-4 h-4 text-gray-500' }),
+                        e('a', { href: formatUrl(item.web), target: '_blank', rel: 'noopener noreferrer', className: 'text-blue-600 hover:underline' }, 'Website')
+                    )
+                ),
+                // Reviews Section Temporarily Disabled
+                // e('div', { className: 'mt-4 pt-4 border-t border-gray-200' },
+                //     e('button', { onClick: () => setShowReviews(!showReviews), className: 'text-blue-600 hover:underline text-sm flex items-center gap-1' }, e('i', { 'data-lucide': showReviews ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' }), showReviews ? 'Hide Reviews' : 'Show Reviews'),
+                //     showReviews && e('div', null, e(ReviewList, { key: `review-list-${item.id}-${refreshReviews}`, itemId: item.id, itemType: 'tvet_college' }), e(ReviewForm, { key: `review-form-${item.id}`, itemId: item.id, itemType: 'tvet_college', onReviewSubmitted: () => setRefreshReviews(prev => prev + 1) }))
+                // )
+            );
+        };
+
+        const Hero = () => {
+            return e('div', { 
+                className: 'relative bg-gray-800 py-32 px-6 sm:py-40 sm:px-12 lg:px-16',
+                style: {
+                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(/static/hero-bg.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                }
+            },
+                e('div', { className: 'relative z-10 text-center' },
+                    e('h1', { className: 'text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl' }, 'Stay Informed, Stay Ahead'),
+                    e('p', { className: 'mt-6 max-w-2xl mx-auto text-lg text-gray-300' }, 'Your source for the latest news, updates, and insights in the South African education and skills development sector.')
+                )
+            );
+        };
+
+        const TabButton = ({ label, icon, activeTab, setActiveTab, tabName, isMobile }) => {
+            const isActive = activeTab === tabName;
+            const baseClasses = 'inline-flex items-center gap-2 whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm transition-colors';
+            const mobileClasses = 'block w-full text-left';
+            const desktopClasses = '';
+            const activeClasses = 'border-blue-600 text-blue-600';
+            const inactiveClasses = 'border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-600';
+
+            return e('button', {
+                onClick: () => setActiveTab(tabName),
+                className: `${baseClasses} ${isMobile ? mobileClasses : desktopClasses} ${isActive ? activeClasses : inactiveClasses}`
+            }, e('i', { 'data-lucide': icon, className: 'w-5 h-5' }), label);
+        };
+        
+        const SearchTab = ({ searchQuery, setSearchQuery }) => {
+            return e('div', null,
+                e('div', { className: 'relative' },
+                    e('i', { 'data-lucide': 'search', className: 'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' }),
+                    e('input', {
+                        type: 'text',
+                        placeholder: 'Search for qualifications, skills programmes, or schools by name or ID...',
+                        value: searchQuery,
+                        onChange: (e) => setSearchQuery(e.target.value),
+                        className: 'w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500'
+                    })
+                )
+            );
+        };
+
+        const VerifyTab = ({ schoolSearchQuery, setSchoolSearchQuery }) => {
+            return e('div', null,
+                e('div', { className: 'relative' },
+                    e('i', { 'data-lucide': 'search', className: 'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' }),
+                    e('input', {
+                        type: 'text',
+                        placeholder: 'Search for accredited schools by name or accreditation number...',
+                        value: schoolSearchQuery,
+                        onChange: (e) => setSchoolSearchQuery(e.target.value),
+                        className: 'w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500'
+                    })
+                )
+            );
+        };
+
+        const NewsTab = () => {
+            const [posts, setPosts] = useState([]);
+
+            useEffect(() => {
+                fetch('/api/posts')
+                    .then(res => res.json())
+                    .then(data => setPosts(data))
+                    .catch(console.error);
+            }, []);
+
+            return e('div', { className: 'space-y-6' },
+                posts.map(post => e(PostCard, { key: post.id, post }))
+            );
+        };
+        
+        const Comment = ({ comment, post, onCommentPosted }) => {
+            const [showReplyForm, setShowReplyForm] = useState(false);
+            const [reply, setReply] = useState('');
+
+            const handleReplySubmit = (e) => {
+                e.preventDefault();
+                if (reply.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: reply, parent_id: comment.id })
+                    })
+                    .then(() => {
+                        setReply('');
+                        setShowReplyForm(false);
+                        onCommentPosted(); // Callback to refresh comments
+                    })
+                    .catch(console.error);
+                }
+            };
+            
+            return e('div', { className: 'ml-4 mt-2' },
+                e('div', { className: 'text-sm bg-gray-100 p-3 rounded-lg' },
+                    e('p', null, renderTextWithLinks(comment.comment)),
+                    e('span', { className: 'text-xs text-gray-500' }, new Date(comment.created_at).toLocaleString()),
+                    e('button', { onClick: () => setShowReplyForm(!showReplyForm), className: 'ml-4 text-xs font-semibold text-blue-600' }, 'Reply')
+                ),
+                showReplyForm && e('form', { onSubmit: handleReplySubmit, className: 'mt-2 ml-4' },
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('input', {
+                            type: 'text',
+                            placeholder: 'Write a reply...',
+                            value: reply,
+                            onChange: (e) => setReply(e.target.value),
+                            className: 'flex-grow p-2 border border-gray-300 rounded-lg'
+                        }),
+                        e('button', { type: 'submit', className: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg' }, 'Reply')
+                    )
+                ),
+                comment.children && e('div', { className: 'ml-4' },
+                    comment.children.map(child => e(Comment, { key: child.id, comment: child, post, onCommentPosted }))
+                )
+            );
+        }
+
+        const PostCard = ({ post }) => {
+            const [likes, setLikes] = useState(post.likes);
+            const [comments, setComments] = useState([]);
+            const [showComments, setShowComments] = useState(false);
+            const [newComment, setNewComment] = useState('');
+
+            const fetchComments = () => {
+                fetch(`/api/posts/${post.id}/comments`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const commentsById = {};
+                        data.forEach(comment => commentsById[comment.id] = { ...comment, children: [] });
+                        
+                        const nestedComments = [];
+                        data.forEach(comment => {
+                            if (comment.parent_id && commentsById[comment.parent_id]) {
+                                commentsById[comment.parent_id].children.push(commentsById[comment.id]);
+                            } else {
+                                nestedComments.push(commentsById[comment.id]);
+                            }
+                        });
+                        setComments(nestedComments);
+                    })
+                    .catch(console.error);
+            };
+
+            useEffect(() => {
+                if (showComments) {
+                    fetchComments();
+                }
+            }, [showComments, post.id]);
+
+            const handleLike = () => {
+                const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+                if (!likedPosts.includes(post.id)) {
+                    fetch(`/api/posts/${post.id}/like`, { method: 'POST' })
+                        .then(() => {
+                            setLikes(likes + 1);
+                            localStorage.setItem('likedPosts', JSON.stringify([...likedPosts, post.id]));
+                        })
+                        .catch(console.error);
+                } else {
+                    alert('You have already liked this post.');
+                }
+            };
+
+            const handleCommentSubmit = (e) => {
+                e.preventDefault();
+                if (newComment.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: newComment })
+                    })
+                    .then(() => {
+                        setNewComment('');
+                        fetchComments(); // Refresh comments
+                    })
+                    .catch(console.error);
+                }
+            };
+
+            return e('div', { className: 'bg-white border border-gray-200 shadow-sm' },
+                post.image_path && e('div', { className: 'w-full h-64 bg-gray-100' }, 
+                                    e('img', { src: `/${post.image_path}`, className: 'w-full h-full object-cover' })),
+                e('div', { className: 'p-6' },
+                    e('h3', { className: 'text-xl font-bold' }, renderTextWithLinks(post.title)),
+                    e('p', { className: 'mt-2 text-gray-800' }, renderTextWithLinks(post.content)),
+                    e('div', { className: 'flex items-center justify-between mt-4 text-sm text-gray-500' },
+                        e('span', null, new Date(post.created_at).toLocaleString()),
+                        e('div', { className: 'flex items-center gap-4' },
+                            e('button', { onClick: handleLike, className: 'flex items-center gap-1 hover:text-blue-600' }, e('i', { 'data-lucide': 'thumbs-up', className: 'w-4 h-4' }), likes),
+                            e('button', { onClick: () => setShowComments(!showComments), className: 'flex items-center gap-1 hover:text-blue-600' }, e('i', { 'data-lucide': 'message-square', className: 'w-4 h-4' }), 'Comment')
+                        )
+                    )
+                ),
+                showComments && e('div', { className: 'p-6 border-t' },
+                    e('h4', { className: 'text-lg font-semibold mb-4' }, 'Comments'),
+                    e('div', { className: 'space-y-4' },
+                        comments.map(comment => e(Comment, { key: comment.id, comment, post, onCommentPosted: fetchComments }))
+                    ),
+                    e('form', { onSubmit: handleCommentSubmit, className: 'mt-6' },
+                        e('div', { className: 'flex items-center gap-2' },
+                            e('input', {
+                                type: 'text',
+                                placeholder: 'Write a comment...',
+                                value: newComment,
+                                onChange: (e) => setNewComment(e.target.value),
+                                className: 'flex-grow p-2 border border-gray-300 rounded-lg'
+                            }),
+                            e('button', { type: 'submit', className: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg' }, 'Post')
+                        )
+                    )
+                )
+            );
+        };
+
+        const SearchResults = ({ results }) => {
+            if (results.length === 0) {
+                return e('div', { className: 'mt-8 text-center text-gray-500' }, 'No results to display. Start a search to see qualifications, skills, or schools.');
+            }
+
+            const qualifications = results.filter(r => r.type === 'qualification');
+            const skillProgrammes = results.filter(r => r.type === 'skill_programme');
+            const schools = results.filter(r => r.type === 'school');
+
+            return e('div', { className: 'mt-6 space-y-8' },
+                qualifications.length > 0 && e('div', { className: 'p-6 bg-blue-50 rounded-lg' },
+                    e('h2', { className: 'text-xl font-bold text-blue-800 mb-4' }, 'Qualifications'),
+                    e('div', { className: 'space-y-4' }, qualifications.map(item => e(ResultCard, { key: item.id, item })))
+                ),
+                skillProgrammes.length > 0 && e('div', { className: 'p-6 bg-yellow-50 rounded-lg' },
+                    e('h2', { className: 'text-xl font-bold text-yellow-800 mb-4' }, 'Skill Programmes'),
+                    e('div', { className: 'space-y-4' }, skillProgrammes.map(item => e(ResultCard, { key: item.id, item })))
+                ),
+                schools.length > 0 && e('div', { className: 'p-6 bg-green-50 rounded-lg' },
+                    e('h2', { className: 'text-xl font-bold text-green-800 mb-4' }, 'Accredited Schools'),
+                    e('div', { className: 'space-y-4' }, schools.map(item => e(ResultCard, { key: item.id, item })))
+                )
+            );
+        };
+        
+        const SchoolResults = ({ results }) => {
+            if (results.length === 0) {
+                return e('div', { className: 'mt-8 text-center text-gray-500' }, 'Search for a provider to verify their accreditation status.');
+            }
+            return e('div', { className: 'mt-6 space-y-4' },
+                results.map(item => e(SchoolCard, { key: item.id, item }))
+            );
+        };
+
+        const ResultCard = ({ item }) => {
+            const typeInfo = {
+                qualification: { icon: 'award', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-600', tagColor: 'text-blue-800' },
+                skill_programme: { icon: 'star', color: 'yellow', bgColor: 'bg-yellow-100', textColor: 'text-yellow-600', tagColor: 'text-yellow-800' },
+                school: { icon: 'building-2', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-600', tagColor: 'text-green-800' }
+            };
+            const info = typeInfo[item.type] || { icon: 'help-circle', bgColor: 'bg-gray-100', textColor: 'text-gray-600', tagColor: 'text-gray-800' };
+            // Reviews and Favorites temporarily disabled for debugging
+            // const [showReviews, setShowReviews] = useState(false);
+            // const [refreshReviews, setRefreshReviews] = useState(0); 
+            // const [isFavorited, setIsFavorited] = useState(false);
+            // useEffect(() => { /* ... */ }, [session.user_id, item.id, item.type]);
+            // const handleFavoriteToggle = async () => { /* ... */ };
+
+            return e('div', { className: 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow' },
+                e('div', { className: 'flex items-start gap-4' },
+                    e('div', { className: `flex-shrink-0 w-10 h-10 rounded-lg ${info.bgColor} flex items-center justify-center` },
+                        e('i', { 'data-lucide': info.icon, className: `w-6 h-6 ${info.textColor}` })
+                    ),
+                    e('div', { className: 'flex-1' },
+                        e('div', { className: 'flex justify-between' },
+                            e('h3', { className: 'text-lg font-semibold text-gray-900' }, renderTextWithLinks(item.title)),
+                            e('div', { className: 'flex items-center gap-2' },
+                                e('span', { className: `text-xs font-medium capitalize px-2 py-1 rounded-full ${info.bgColor} ${info.tagColor}` }, item.type.replace('_', ' ')),
+                                // session.user_id && e('button', { onClick: handleFavoriteToggle, className: 'text-gray-400 hover:text-red-500' },
+                                //     e('i', { 'data-lucide': isFavorited ? 'heart' : 'heart', className: `w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}` })
+                                // )
+                            )
+                        ),
+                        item.nqf_level && e('p', { className: 'text-sm text-gray-600 mt-1' }, `NQF Level: ${item.nqf_level} · Credits: ${item.credits || 'N/A'}`),
+                        item.city && e('p', { className: 'text-sm text-gray-600 mt-1' }, `${item.city}, ${item.province}`),
+                        item.type === 'qualification' && e('button', {
+                            onClick: () => setActiveTab('career_paths'),
+                            className: 'mt-2 text-blue-600 hover:underline text-sm flex items-center gap-1'
+                        },
+                            e('i', { 'data-lucide': 'trending-up', className: 'w-4 h-4' }),
+                            'View Career Paths'
+                        )
+                    )
+                ),
+                // Reviews Section Temporarily Disabled
+                // e('div', { className: 'mt-4 pt-4 border-t border-gray-200' },
+                //     e('button', { onClick: () => setShowReviews(!showReviews), className: 'text-blue-600 hover:underline text-sm flex items-center gap-1' }, e('i', { 'data-lucide': showReviews ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' }), showReviews ? 'Hide Reviews' : 'Show Reviews'),
+                //     showReviews && e('div', null, e(ReviewList, { key: `review-list-${item.id}-${refreshReviews}`, itemId: item.id, itemType: item.type }), e(ReviewForm, { key: `review-form-${item.id}`, itemId: item.id, itemType: item.type, onReviewSubmitted: () => setRefreshReviews(prev => prev + 1) }))
+                // )
+            );
+        };
+        
+        const SchoolCard = ({ item }) => {
+            const [showReviews, setShowReviews] = useState(false);
+            const [refreshReviews, setRefreshReviews] = useState(0); // State to trigger review refresh
+            const [isFavorited, setIsFavorited] = useState(false);
+
+            useEffect(() => {
+                if (session.user_id) {
+                    fetch(`/api/users/${session.user_id}/favorites`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const favorited = data.some(fav => fav.item_id === String(item.id) && fav.item_type === 'school');
+                            setIsFavorited(favorited);
+                        })
+                        .catch(console.error);
+                }
+            }, [session.user_id, item.id]);
+
+            const handleFavoriteToggle = async () => {
+                if (!session.user_id) {
+                    alert('Please log in to favorite items.');
+                    return;
+                }
+
+                const url = '/api/favorites';
+                const method = isFavorited ? 'DELETE' : 'POST';
+                const body = { item_id: String(item.id), item_type: 'school' };
+
+                try {
+                    const response = await fetch(isFavorited ? `${url}/school/${item.id}` : url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: isFavorited ? null : JSON.stringify(body),
+                    });
+
+                    if (response.ok) {
+                        setIsFavorited(!isFavorited);
+                    } else {
+                        const errorData = await response.json();
+                        alert(errorData.message || 'Failed to toggle favorite.');
+                    }
+                } catch (error) {
+                    console.error('Error toggling favorite:', error);
+                    alert('An error occurred while toggling favorite.');
+                }
+            };
+
+             return e('div', { className: 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow' },
+                e('div', { className: 'flex items-start gap-4' },
+                    e('div', { className: `flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center` },
+                        e('i', { 'data-lucide': 'building-2', className: `w-6 h-6 text-green-600` })
+                    ),
+                    e('div', { className: 'flex-1' },
+                        e('div', { className: 'flex justify-between' },
+                            e('h3', { className: 'text-lg font-semibold text-gray-900' }, item.school_name),
+                            session.user_id && e('button', { onClick: handleFavoriteToggle, className: 'text-gray-400 hover:text-red-500' },
+                                e('i', { 'data-lucide': isFavorited ? 'heart' : 'heart', className: `w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}` })
+                            )
+                        ),
+                        e('p', { className: 'text-sm text-gray-600 mt-1' }, `Acc. Number: ${item.accreditation_number}`),
+                         e('p', { className: 'text-sm text-gray-500 mt-2' }, item.physical_address),
+                        e('div', { className: 'mt-3 flex items-center gap-2' },
+                            e('i', { 'data-lucide': 'check-circle', className: 'w-5 h-5 text-green-600' }),
+                            e('span', { className: 'text-sm font-medium text-green-700' }, `Status: ${item.status || 'Active'}`)
+                        )
+                    )
+                ),
+                e('div', { className: 'mt-4 pt-4 border-t border-gray-200' },
+                    e('button', {
+                        onClick: () => setShowReviews(!showReviews),
+                        className: 'text-blue-600 hover:underline text-sm flex items-center gap-1'
+                    },
+                        e('i', { 'data-lucide': showReviews ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' }),
+                        showReviews ? 'Hide Reviews' : 'Show Reviews'
+                    ),
+                    showReviews && e('div', null,
+                        e(ReviewList, { key: `review-list-${item.id}-${refreshReviews}`, itemId: item.id, itemType: 'school' }),
+                        e(ReviewForm, { key: `review-form-${item.id}`, itemId: item.id, itemType: 'school', onReviewSubmitted: () => setRefreshReviews(prev => prev + 1) })
+                    )
+                )
+            );
+        };
+
+        const AccommodationTab = () => {
+            const [accommodations, setAccommodations] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetch('/api/accommodations')
+                    .then(res => res.json())
+                    .then(data => {
+                        setAccommodations(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching accommodations:', error);
+                        setLoading(false);
+                    });
+            }, []);
+
+            useEffect(() => {
+                if (!loading) {
+                    lucide.createIcons();
+                }
+            }, [loading]);
+
+            if (loading) {
+                return e('div', { className: 'text-center p-8' }, 'Loading...');
+            }
+
+            return e('div', { className: 'space-y-8' },
+                Object.keys(accommodations).sort().map(city =>
+                    e('div', { key: city, className: 'p-6 bg-gray-100 rounded-lg' },
+                        e('h2', { className: 'text-2xl font-bold text-gray-800 mb-4' }, city),
+                        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            accommodations[city].map(item => e(AccommodationCard, { key: item.id, item }))
+                        )
+                    )
+                )
+            );
+        };
+
+        const AccommodationCard = ({ item }) => {
+            const [showReviews, setShowReviews] = useState(false);
+            const [refreshReviews, setRefreshReviews] = useState(0); // State to trigger review refresh
+            const [isFavorited, setIsFavorited] = useState(false);
+
+            useEffect(() => {
+                if (session.user_id) {
+                    fetch(`/api/users/${session.user_id}/favorites`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const favorited = data.some(fav => fav.item_id === String(item.id) && fav.item_type === 'accommodation');
+                            setIsFavorited(favorited);
+                        })
+                        .catch(console.error);
+                }
+            }, [session.user_id, item.id]);
+
+            const handleFavoriteToggle = async () => {
+                if (!session.user_id) {
+                    alert('Please log in to favorite items.');
+                    return;
+                }
+
+                const url = '/api/favorites';
+                const method = isFavorited ? 'DELETE' : 'POST';
+                const body = { item_id: String(item.id), item_type: 'accommodation' };
+
+                try {
+                    const response = await fetch(isFavorited ? `${url}/accommodation/${item.id}` : url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: isFavorited ? null : JSON.stringify(body),
+                    });
+
+                    if (response.ok) {
+                        setIsFavorited(!isFavorited);
+                    } else {
+                        const errorData = await response.json();
+                        alert(errorData.message || 'Failed to toggle favorite.');
+                    }
+                } catch (error) {
+                    console.error('Error toggling favorite:', error);
+                    alert('An error occurred while toggling favorite.');
+                }
+            };
+
+            return e('div', { className: 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col' },
+                e('div', { className: 'flex items-center justify-between' },
+                    e('h3', { className: 'text-lg font-semibold text-gray-900' }, item.accommodation_name),
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'badge-check', className: 'w-5 h-5 text-blue-500' }),
+                        session.user_id && e('button', { onClick: handleFavoriteToggle, className: 'text-gray-400 hover:text-red-500' },
+                            e('i', { 'data-lucide': isFavorited ? 'heart' : 'heart', className: `w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}` })
+                        )
+                    )
+                ),
+                e('div', { className: 'mt-1' },
+                    e('p', { className: 'text-sm text-gray-600 flex items-center gap-2' },
+                        e('i', { 'data-lucide': 'map-pin', className: 'w-4 h-4 text-gray-500' }),
+                        item.suburb
+                    )
+                ),
+                e('div', { className: 'mt-4' },
+                    e('p', { className: 'text-md font-bold text-gray-800' }, `R ${item.monthly_pay} / month`),
+                    e('div', { className: 'flex flex-wrap gap-2 mt-2' },
+                        item.payment_nsfas === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-800' }, 'NSFAS'),
+                        item.payment_bursary === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800' }, 'Bursary'),
+                        item.payment_cash === 'Yes' && e('span', { className: 'text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800' }, 'Cash')
+                    )
+                ),
+                e('div', { className: 'mt-4 pt-4 border-t border-gray-200' },
+                    e('button', {
+                        onClick: () => setShowReviews(!showReviews),
+                        className: 'text-blue-600 hover:underline text-sm flex items-center gap-1'
+                    },
+                        e('i', { 'data-lucide': showReviews ? 'chevron-up' : 'chevron-down', className: 'w-4 h-4' }),
+                        showReviews ? 'Hide Reviews' : 'Show Reviews'
+                    ),
+                    showReviews && e('div', null,
+                        e(ReviewList, { key: `review-list-${item.id}-${refreshReviews}`, itemId: item.id, itemType: 'accommodation' }),
+                        e(ReviewForm, { key: `review-form-${item.id}`, itemId: item.id, itemType: 'accommodation', onReviewSubmitted: () => setRefreshReviews(prev => prev + 1) })
+                    )
+                )
+            );
+        };
+
+        const Header = ({isMenuOpen, setIsMenuOpen, activeTab, setActiveTab}) => {
+            const isLoggedIn = session && session.user_id;
+
+            const authLinks = () => {
+                if (isLoggedIn) {
+                    return [
+                        e('a', { key: 'profile', href: '/profile', className: 'text-sm font-medium text-gray-700 hover:text-blue-600' }, 'Profile'),
+                        e('a', { key: 'logout', href: '/api/logout', className: 'text-sm font-medium text-gray-700 hover:text-blue-600' }, 'Logout')
+                    ];
+                }
+                return [
+                    e('a', { key: 'login', href: '/login', className: 'text-sm font-medium text-gray-700 hover:text-blue-600' }, 'Login'),
+                    e('a', { key: 'register', href: '/register', className: 'bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700' }, 'Register')
+                ];
+            };
+
+            return e('header', { className: 'bg-white shadow-sm sticky top-0 z-50' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' },
+                    e('div', { className: 'flex justify-between items-center py-4' },
+                        e('a', { href: '/', className: 'flex items-center gap-2 cursor-pointer' },
+                            e('i', { 'data-lucide': 'feather', className: 'w-8 h-8 text-blue-600' }),
+                            e('span', { className: 'text-xl font-bold text-gray-900' }, 'SafeLearn')
+                        ),
+                        e('div', { className: 'hidden sm:flex sm:items-center sm:space-x-4' },
+                            e(TabButton, { label: 'Qualifications', icon: 'search', activeTab, setActiveTab, tabName: 'search', isMobile: false }),
+                            e(TabButton, { label: 'Verify Provider', icon: 'shield-check', activeTab, setActiveTab, tabName: 'verify', isMobile: false }),
+                            e(TabButton, { label: 'SETAs', icon: 'briefcase', activeTab, setActiveTab, tabName: 'setas', isMobile: false }),
+                            e(TabButton, { label: 'Bursaries', icon: 'graduation-cap', activeTab, setActiveTab, tabName: 'bursaries', isMobile: false }),
+                            e(TabButton, { label: 'Career Paths', icon: 'trending-up', activeTab, setActiveTab, tabName: 'career_paths', isMobile: false }),
+                            e(TabButton, { label: 'Accommodation', icon: 'home', activeTab, setActiveTab, tabName: 'accommodation', isMobile: false }),
+                            e(TabButton, { label: 'TVET Colleges', icon: 'building', activeTab, setActiveTab, tabName: 'tvet_colleges', isMobile: false }),
+                            e(TabButton, { label: 'News', icon: 'newspaper', activeTab, setActiveTab, tabName: 'news', isMobile: false }),
+                            e(TabButton, { label: 'Links', icon: 'book-open', activeTab, setActiveTab, tabName: 'materials', isMobile: false })
+                        ),
+                        e('div', { className: 'hidden sm:flex items-center space-x-4' }, ...authLinks()),
+                         e('div', { className: 'sm:hidden' },
+                            e('button', { onClick: () => setIsMenuOpen(!isMenuOpen), type: 'button', className: 'inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500' },
+                                e('span', { className: 'sr-only' }, 'Open main menu'),
+                                isMenuOpen ? e('i', { 'data-lucide': 'x', className: 'block h-6 w-6' }) : e('i', { 'data-lucide': 'menu', className: 'block h-6 w-6' })
+                            )
+                        )
+                    )
+                ),
+                isMenuOpen && e('div', { className: 'sm:hidden' },
+                    e('div', { className: 'px-2 pt-2 pb-3 space-y-1' },
+                        e(TabButton, { label: 'Qualifications', icon: 'search', activeTab, setActiveTab, tabName: 'search', isMobile: true }),
+                        e(TabButton, { label: 'Verify Provider', icon: 'shield-check', activeTab, setActiveTab, tabName: 'verify', isMobile: true }),
+                        e(TabButton, { label: 'SETAs', icon: 'briefcase', activeTab, setActiveTab, tabName: 'setas', isMobile: true }),
+                        e(TabButton, { label: 'Bursaries', icon: 'graduation-cap', activeTab, setActiveTab, tabName: 'bursaries', isMobile: true }),
+                        e(TabButton, { label: 'Career Paths', icon: 'trending-up', activeTab, setActiveTab, tabName: 'career_paths', isMobile: true }),
+                        e(TabButton, { label: 'Accommodation', icon: 'home', activeTab, setActiveTab, tabName: 'accommodation', isMobile: true }),
+                        e(TabButton, { label: 'TVET Colleges', icon: 'building', activeTab, setActiveTab, tabName: 'tvet_colleges', isMobile: true }),
+                        e(TabButton, { label: 'News', icon: 'newspaper', activeTab, setActiveTab, tabName: 'news', isMobile: true }),
+                        e(TabButton, { label: 'Links', icon: 'book-open', activeTab, setActiveTab, tabName: 'materials', isMobile: true }),
+                        // Add auth links to mobile menu too
+                        e('div', { className: 'border-t border-gray-200 mt-2 pt-2 space-y-1' }, ...authLinks().map(link => e('a', { ...link.props, className: `${link.props.className} block px-3 py-2` })))
+                    )
+                )
+            );
+        };
+
+        const Footer = () => {
+            return e('footer', { className: 'bg-gray-800 text-white py-8 mt-12' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center' },
+                    e('div', { className: 'mb-4' },
+                        e('a', { href: '/', className: 'flex items-center justify-center gap-2 text-xl font-bold text-white hover:text-blue-400 transition-colors' },
+                            e('i', { 'data-lucide': 'feather', className: 'w-6 h-6' }),
+                            e('span', null, 'SafeLearn')
+                        )
+                    ),
+                    e('div', { className: 'flex justify-center space-x-6 mb-6' },
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'About'),
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'Privacy Policy'),
+                        e('a', { href: '#', className: 'text-gray-300 hover:text-white' }, 'Terms of Service')
+                    ),
+                    e('p', { className: 'text-gray-500 text-sm' }, '© 2023 SafeLearn. All rights reserved.')
+                )
+            );
+        };
+
+        ReactDOM.render(e(App), document.getElementById('root'));
+    </script>
+</body>
+</html>

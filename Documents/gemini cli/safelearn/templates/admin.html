@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SafeLearn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #111827;
+        }
+
+        .glass-card {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="text-white min-h-screen">
+    <div id="root"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // lucide.createIcons(); // Removed this top-level call
+        });
+
+        const e = React.createElement;
+        const { useState, useEffect } = React;
+
+        const LucideIcon = ({ name, className, size = 20 }) => {
+            return e('i', {
+                'data-lucide': name,
+                className: `${className}`,
+                style: { width: size, height: size }
+            });
+        };
+
+        const renderTextWithLinks = (text) => {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const parts = text.split(urlRegex);
+            return parts.map((part, index) => {
+                if (part.match(urlRegex)) {
+                    return e('a', { key: index, href: part, target: '_blank', rel: 'noopener noreferrer', className: 'text-indigo-400 hover:text-indigo-300 underline' }, part);
+                }
+                return part;
+            });
+        };
+
+        function AdminDashboard() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [posts, setPosts] = useState([]);
+            const [bursaries, setBursaries] = useState([]);
+            const [learnerships, setLearnerships] = useState([]);
+            const [accommodations, setAccommodations] = useState([]);
+
+            const fetchPosts = () => fetch('/api/posts').then(res => res.json()).then(setPosts).catch(console.error);
+            const fetchBursaries = () => fetch('/api/bursaries').then(res => res.json()).then(setBursaries).catch(console.error);
+            const fetchLearnerships = () => fetch('/api/learnerships').then(res => res.json()).then(setLearnerships).catch(console.error);
+            const fetchAccommodations = () => fetch('/api/accommodations').then(res => res.json()).then(data => {
+                const flatList = Object.values(data).flat();
+                setAccommodations(flatList);
+            }).catch(console.error);
+
+            useEffect(() => {
+                fetchPosts();
+                fetchBursaries();
+                fetchLearnerships();
+                fetchAccommodations();
+            }, []);
+
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                }, 50);
+                return () => clearTimeout(timer);
+            }, [activeTab, posts, bursaries, learnerships, accommodations]);
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'dashboard': return e(Dashboard);
+                    case 'bursaries': return e(BursariesManager, { bursaries, onBursaryChange: fetchBursaries });
+                    case 'learnerships': return e(LearnershipsManager, { learnerships, onLearnershipChange: fetchLearnerships });
+                    case 'posts': return e(PostsManager, { posts, onPostChange: fetchPosts });
+                    case 'accommodations': return e(AccommodationsManager, { accommodations, onAccommodationChange: fetchAccommodations });
+                    case 'messages': return e(MessagesManager);
+                    default: return null;
+                }
+            };
+
+            const tabButtonClass = (tabName) => `py-2 px-6 rounded-lg font-medium transition-all ${activeTab === tabName ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`;
+
+            return e('div', { className: 'min-h-screen flex flex-col' },
+                e(Header),
+                e('main', { className: 'flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in' },
+                    e('div', { className: 'overflow-x-auto mb-8' },
+                        e('div', { className: 'flex gap-2 p-1 bg-gray-800/50 rounded-xl border border-gray-700 w-fit' },
+                            e('button', { onClick: () => setActiveTab('dashboard'), className: tabButtonClass('dashboard') }, 'Dashboard'),
+                            e('button', { onClick: () => setActiveTab('bursaries'), className: tabButtonClass('bursaries') }, 'Bursaries'),
+                            e('button', { onClick: () => setActiveTab('learnerships'), className: tabButtonClass('learnerships') }, 'Learnerships'),
+                            e('button', { onClick: () => setActiveTab('posts'), className: tabButtonClass('posts') }, 'Posts'),
+                            e('button', { onClick: () => setActiveTab('accommodations'), className: tabButtonClass('accommodations') }, 'Accommodations'),
+                            e('button', { onClick: () => setActiveTab('messages'), className: tabButtonClass('messages') }, 'Messages')
+                        )
+                    ),
+                    renderContent()
+                )
+            );
+        }
+
+        const MessagesManager = () => {
+            const [messages, setMessages] = useState([]);
+            const [users, setUsers] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [filter, setFilter] = useState('all');
+            const [selectedMessage, setSelectedMessage] = useState(null);
+            const [reply, setReply] = useState({ recipient_id: '', subject: '', message: '' });
+            const [status, setStatus] = useState(null);
+            const [view, setView] = useState('inbox'); // 'inbox' or 'compose'
+
+            const fetchMessages = (currentFilter) => {
+                setLoading(true);
+                fetch(`/api/admin/messages?filter=${currentFilter}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        setMessages(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching messages:', error);
+                        setLoading(false);
+                    });
+            };
+
+            const fetchUsers = () => {
+                fetch('/api/users/list')
+                    .then(res => res.json())
+                    .then(setUsers)
+                    .catch(console.error);
+            };
+
+            useEffect(() => {
+                if (view === 'inbox') {
+                    fetchMessages(filter);
+                }
+                fetchUsers();
+            }, [filter, view]);
+
+
+            const handleFilterChange = (newFilter) => {
+                setFilter(newFilter);
+            };
+
+            const handleMarkAsRead = (messageId, isRead) => {
+                fetch(`/api/admin/messages/${messageId}/read`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_read: isRead })
+                }).then(() => fetchMessages(filter));
+            };
+
+            const handleReplyChange = (field, value) => {
+                setReply(prev => ({ ...prev, [field]: value }));
+            };
+            
+            const handleSelectMessage = (msg) => {
+                setView('inbox');
+                setSelectedMessage(msg);
+                if (msg.sender_id) { // Pre-fill reply form for user messages
+                    setReply({
+                        recipient_id: msg.sender_id,
+                        subject: `Re: ${msg.subject}`,
+                        message: `\n\n--- Original Message ---\n${msg.message}`
+                    });
+                } else { // Clear for contact form messages
+                     setReply({
+                        recipient_id: '',
+                        subject: `Re: ${msg.subject}`,
+                        message: `\n\n--- Original Message ---\n${msg.message}`
+                    });
+                }
+            };
+
+            const handleSendReply = (e) => {
+                e.preventDefault();
+                setStatus({ message: 'Sending...', type: 'info' });
+                fetch('/api/admin/messages/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reply)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setStatus({ message: 'Message sent!', type: 'success' });
+                        setReply({ recipient_id: '', subject: '', message: '' });
+                    } else {
+                        setStatus({ message: data.error || 'Failed to send message.', type: 'error' });
+                    }
+                    setTimeout(() => setStatus(null), 4000);
+                })
+                .catch(err => {
+                    setStatus({ message: 'Error: ' + err, type: 'error' });
+                    setTimeout(() => setStatus(null), 4000);
+                });
+            };
+            
+            const filterButtonClass = (filterName) => `px-4 py-2 text-sm rounded-lg font-medium transition-colors ${filter === filterName ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+
+            const InboxView = () => e('div', { className: 'lg:col-span-1 space-y-4' },
+                e('div', {className: 'flex justify-between items-center'},
+                    e('h2', { className: 'text-2xl font-bold flex items-center gap-3' },
+                        e(LucideIcon, { name: 'mail', className: 'text-indigo-400', size: 24 }),
+                        'Inbox'
+                    ),
+                    e('button', { onClick: () => setView('compose'), className: 'flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium text-sm transition-colors' },
+                        e(LucideIcon, {name: 'edit', size: 16}),
+                        'Compose'
+                    )
+                ),
+                e('div', { className: 'flex gap-2' },
+                    e('button', { onClick: () => handleFilterChange('all'), className: filterButtonClass('all') }, 'All'),
+                    e('button', { onClick: () => handleFilterChange('unread'), className: filterButtonClass('unread') }, 'Unread'),
+                    e('button', { onClick: () => handleFilterChange('contact'), className: filterButtonClass('contact') }, 'Contact'),
+                    e('button', { onClick: () => handleFilterChange('user'), className: filterButtonClass('user') }, 'User')
+                ),
+                loading ? e('div', { className: 'text-center p-8' }, e('div', { className: 'w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto' }))
+                    : messages.length === 0 
+                        ? e('p', { className: 'text-gray-500 p-4 bg-gray-800 rounded-lg' }, 'No messages in this category.')
+                        : e('div', { className: 'space-y-3' },
+                            messages.map(msg => e('div', { 
+                                key: msg.id, 
+                                onClick: () => handleSelectMessage(msg),
+                                className: `p-4 rounded-lg cursor-pointer border-2 ${selectedMessage && selectedMessage.id === msg.id ? 'border-indigo-500 bg-gray-800' : 'border-gray-700 bg-gray-900 hover:bg-gray-800'}` 
+                            },
+                                e('div', { className: 'flex justify-between items-start' },
+                                    e('p', { className: 'font-bold' }, msg.sender_name || 'Anonymous'),
+                                    !msg.is_read && e('span', { className: 'w-3 h-3 bg-indigo-500 rounded-full' })
+                                ),
+                                e('p', { className: 'text-sm text-indigo-400' }, msg.subject),
+                                e('p', { className: 'text-xs text-gray-500 mt-2' }, new Date(msg.created_at).toLocaleString())
+                            ))
+                        )
+            );
+
+            const MessageDetailView = () => selectedMessage ? e('div', { className: 'glass-card p-6 rounded-2xl' },
+                e('h3', { className: 'text-xl font-bold mb-4' }, selectedMessage.subject),
+                e('div', { className: 'flex justify-between items-center mb-4 pb-4 border-b border-gray-700' },
+                    e('div', null,
+                        e('p', { className: 'text-white' }, e('strong', null, 'From: '), selectedMessage.sender_name),
+                        e('p', { className: 'text-gray-400 text-sm' }, e('strong', null, 'Email: '), selectedMessage.sender_email || 'N/A')
+                    ),
+                    e('button', { onClick: () => handleMarkAsRead(selectedMessage.id, !selectedMessage.is_read), className: 'text-sm font-medium flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-lg hover:bg-gray-600' }, 
+                        e(LucideIcon, {name: selectedMessage.is_read ? 'mail-open' : 'mail', size: 16}),
+                        selectedMessage.is_read ? 'Mark as Unread' : 'Mark as Read'
+                    )
+                ),
+                e('div', { className: 'text-gray-300 mb-8 max-h-60 overflow-y-auto pr-2' }, e('p', { style: { whiteSpace: 'pre-wrap' } }, renderTextWithLinks(selectedMessage.message))),
+                
+                e('h4', { className: 'text-lg font-bold mt-8 mb-4 border-t border-gray-700 pt-6' }, 'Send a Message'),
+                e('form', { onSubmit: handleSendReply, className: 'space-y-4' },
+                   status && e('div', { className: `p-3 rounded-lg text-sm font-medium ${status.type === 'success' ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300'}` }, status.message),
+                   e('div', null, 
+                        e('label', { className: 'block text-sm font-medium mb-1' }, 'Recipient'),
+                        e('select', { 
+                            name: 'recipient_id', 
+                            value: reply.recipient_id,
+                            onChange: (e) => handleReplyChange('recipient_id', e.target.value),
+                            className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3'
+                         },
+                            e('option', { value: '' }, 'Select a user...'),
+                            users.map(user => e('option', { key: user.id, value: user.id }, `${user.username} (${user.email})`))
+                        )
+                   ),
+                   e('div', null, e('label', { className: 'block text-sm font-medium mb-1' }, 'Subject'), e(Input, { type: 'text', name: 'subject', value: reply.subject, onChange: (e) => handleReplyChange('subject', e.target.value), placeholder: 'Subject' })),
+                   e('div', null, e('label', { className: 'block text-sm font-medium mb-1' }, 'Message'), e('textarea', { name: 'message', value: reply.message, onChange: (e) => handleReplyChange('message', e.target.value), className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3', rows: 5, placeholder: 'Your message...' })),
+                   e(Button, { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-500 text-white w-full' }, 'Send Message')
+                )
+
+            ) : e('div', { className: 'flex items-center justify-center h-full glass-card rounded-2xl' },
+                e('div', { className: 'text-center' },
+                    e(LucideIcon, {name: 'mail', className: 'text-gray-600 mx-auto mb-4', size: 48 }),
+                    e('p', { className: 'text-gray-500' }, 'Select a message to view its content.')
+                )
+            );
+
+            const ComposeView = () => e('div', { className: 'lg:col-span-3' },
+                e('div', { className: 'glass-card p-6 rounded-2xl' },
+                    e('div', {className: 'flex justify-between items-center mb-6'},
+                        e('h2', { className: 'text-2xl font-bold flex items-center gap-3' },
+                            e(LucideIcon, { name: 'edit', className: 'text-green-400', size: 24 }),
+                            'Compose Message'
+                        ),
+                        e('button', { onClick: () => setView('inbox'), className: 'flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors' },
+                            e(LucideIcon, {name: 'inbox', size: 16}),
+                            'Back to Inbox'
+                        )
+                    ),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                        e('div', { className: 'md:col-span-1' },
+                            e('h3', { className: 'text-lg font-bold mb-4' }, 'Users'),
+                            e('div', { className: 'space-y-2 max-h-96 overflow-y-auto' },
+                                users.map(user => e('div', {
+                                    key: user.id,
+                                    onClick: () => handleReplyChange('recipient_id', user.id),
+                                    className: `p-3 rounded-lg cursor-pointer ${reply.recipient_id == user.id ? 'bg-indigo-600 text-white' : 'bg-gray-800 hover:bg-gray-700'}`
+                                },
+                                    e('p', { className: 'font-bold' }, user.username),
+                                    e('p', { className: 'text-sm' }, user.email)
+                                ))
+                            )
+                        ),
+                        e('div', { className: 'md:col-span-2' },
+                             e('form', { onSubmit: handleSendReply, className: 'space-y-4' },
+                                status && e('div', { className: `p-3 rounded-lg text-sm font-medium ${status.type === 'success' ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300'}` }, status.message),
+                               e('div', null, 
+                                    e('label', { className: 'block text-sm font-medium mb-1' }, 'Recipient'),
+                                    e('select', { 
+                                        name: 'recipient_id', 
+                                        value: reply.recipient_id,
+                                        onChange: (e) => handleReplyChange('recipient_id', e.target.value),
+                                        className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3'
+                                     },
+                                        e('option', { value: '' }, 'Select a user...'),
+                                        users.map(user => e('option', { key: user.id, value: user.id }, `${user.username} (${user.email})`))
+                                    )
+                               ),
+                               e('div', null, e('label', { className: 'block text-sm font-medium mb-1' }, 'Subject'), e(Input, { type: 'text', name: 'subject', value: reply.subject, onChange: (e) => handleReplyChange('subject', e.target.value), placeholder: 'Subject' })),
+                               e('div', null, e('label', { className: 'block text-sm font-medium mb-1' }, 'Message'), e('textarea', { name: 'message', value: reply.message, onChange: (e) => handleReplyChange('message', e.target.value), className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3', rows: 8, placeholder: 'Your message...' })),
+                               e(Button, { type: 'submit', className: 'bg-green-600 hover:bg-green-500 text-white w-full' }, 'Send Message')
+                            )
+                        )
+                    )
+                )
+            );
+
+            return e('div', { className: 'grid grid-cols-1 lg:grid-cols-3 gap-8' },
+                view === 'inbox' ? e(InboxView) : null,
+                view === 'inbox' ? e('div', { className: 'lg:col-span-2' }, e(MessageDetailView)) : e(ComposeView)
+            );
+        };
+        
+        const Dashboard = () => {
+            const [stats, setStats] = useState(null);
+
+            useEffect(() => {
+                fetch('/api/stats')
+                    .then(res => res.json())
+                    .then(setStats)
+                    .catch(console.error);
+            }, []);
+
+            if (!stats) return e('div', { className: 'flex justify-center p-20' }, e('div', { className: 'w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin' }));
+
+            const StatCard = ({ title, value, icon, color }) => e('div', { className: 'glass-card p-6 rounded-2xl flex items-center gap-4' },
+                e('div', { className: `p-4 rounded-xl ${color} bg-opacity-10` }, e(LucideIcon, { name: icon, className: `${color.replace('bg-', 'text-')}`, size: 32 })),
+                e('div', null,
+                    e('p', { className: 'text-gray-400 text-sm font-medium' }, title),
+                    e('p', { className: 'text-3xl font-bold' }, value)
+                )
+            );
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6' },
+                e(StatCard, { title: 'Total Users', value: stats.total_users, icon: 'users', color: 'bg-blue-500' }),
+                e(StatCard, { title: 'Bursaries', value: stats.total_bursaries, icon: 'graduation-cap', color: 'bg-green-500' }),
+                e(StatCard, { title: 'Learnerships', value: stats.total_learnerships, icon: 'briefcase', color: 'bg-yellow-500' }),
+                e(StatCard, { title: 'Accommodations', value: stats.total_accommodations, icon: 'home', color: 'bg-purple-500' }),
+                e(StatCard, { title: 'Qualifications', value: stats.total_qualifications, icon: 'award', color: 'bg-indigo-500' }),
+                e(StatCard, { title: 'Skills Programmes', value: stats.total_skills_programmes, icon: 'star', color: 'bg-pink-500' }),
+                e(StatCard, { title: 'Accredited Schools', value: stats.total_accredited_schools, icon: 'building-2', color: 'bg-teal-500' })
+            );
+        };
+
+        const Input = (props) => e('input', { ...props, className: `w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${props.className || ''}` });
+        const Button = ({ children, className, ...props }) => e('button', { ...props, className: `px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 ${className}` }, children);
+
+        const AccommodationsManager = ({ accommodations, onAccommodationChange }) => {
+            const [editingId, setEditingId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [status, setStatus] = useState(null);
+            const formRef = React.useRef();
+
+            const startEdit = (acc) => {
+                setEditingId(acc.id);
+                const form = formRef.current;
+                form.accommodation_name.value = acc.accommodation_name;
+                form.suburb.value = acc.suburb;
+                form.city.value = acc.city;
+                form.province.value = acc.province || '';
+                form.monthly_pay.value = acc.monthly_pay;
+                form.payment_nsfas.value = acc.payment_nsfas;
+                form.payment_bursary.value = acc.payment_bursary;
+                form.payment_cash.value = acc.payment_cash;
+                window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
+            };
+
+            const onSubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(ev.target);
+                const url = editingId ? `/api/accommodations/${editingId}` : '/api/accommodations';
+                fetch(url, { method: 'POST', body: formData }).then(() => {
+                    onAccommodationChange();
+                    ev.target.reset();
+                    setEditingId(null);
+                    setStatus({ message: editingId ? 'Accommodation updated!' : 'Accommodation added!', type: 'success' });
+                    setTimeout(() => setStatus(null), 3000);
+                }).catch(err => {
+                    setStatus({ message: 'Error: ' + err.message, type: 'error' });
+                    setTimeout(() => setStatus(null), 5000);
+                });
+            };
+
+            const filtered = accommodations.filter(acc =>
+                acc.accommodation_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                acc.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                acc.suburb.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                acc.province.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            return e('div', { className: 'glass-card rounded-2xl p-8' },
+                e('h2', { className: 'text-2xl font-bold mb-6 flex items-center gap-3' },
+                    e(LucideIcon, { name: 'home', className: 'text-indigo-400', size: 24 }),
+                    editingId ? 'Edit Accommodation' : 'Manage Accommodations'
+                ),
+                e('form', { ref: formRef, onSubmit, className: 'grid gap-6 mb-8' },
+                    status && e('div', { className: `p-4 rounded-xl text-sm font-medium ${status.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}` }, status.message),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        e(Input, { type: 'text', name: 'accommodation_name', placeholder: 'Accommodation Name', required: true }),
+                        e(Input, { type: 'text', name: 'suburb', placeholder: 'Suburb', required: true }),
+                        e(Input, { type: 'text', name: 'city', placeholder: 'City', required: true }),
+                        e(Input, { type: 'text', name: 'province', placeholder: 'Province (e.g. Gauteng)', required: true }),
+                        e(Input, { type: 'number', name: 'monthly_pay', placeholder: 'Monthly Pay' }),
+                        e(Input, { type: 'text', name: 'payment_nsfas', placeholder: 'Accepts NSFAS (Yes/No)' }),
+                        e(Input, { type: 'text', name: 'payment_bursary', placeholder: 'Accepts Bursary (Yes/No)' }),
+                        e(Input, { type: 'text', name: 'payment_cash', placeholder: 'Accepts Cash (Yes/No)' }),
+                    ),
+                    e('div', { className: 'flex gap-4' },
+                        e(Button, { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-500 text-white flex-1' }, editingId ? 'Update Accommodation' : 'Add Accommodation'),
+                        editingId && e(Button, { type: 'button', onClick: () => { setEditingId(null); formRef.current.reset(); }, className: 'bg-gray-700 hover:bg-gray-600 text-white' }, 'Cancel')
+                    )
+                ),
+                e('div', { className: 'mb-4 relative' },
+                    e('div', { className: 'absolute left-3 top-3' }, e(LucideIcon, { name: 'search', className: 'text-gray-400', size: 20 })),
+                    e(Input, {
+                        type: 'text',
+                        placeholder: 'Search accommodations...',
+                        value: searchTerm,
+                        onChange: (e) => setSearchTerm(e.target.value),
+                        className: 'pl-10'
+                    })
+                ),
+                e('div', { className: 'grid gap-4' },
+                    filtered.map(acc => e('div', { key: acc.id, className: 'bg-gray-800 border border-gray-700 p-4 rounded-xl flex justify-between items-center group hover:border-indigo-500/30' },
+                        e('div', null,
+                            e('p', { className: 'font-bold text-white' }, acc.accommodation_name),
+                            e('p', { className: 'text-sm text-gray-400' }, `${acc.suburb}, ${acc.city} (${acc.province})`)
+                        ),
+                        e('div', { className: 'flex gap-2' },
+                            e('button', {
+                                onClick: () => startEdit(acc),
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'edit-2', size: 16 }), 'Edit'),
+                            e('button', {
+                                onClick: () => {
+                                    if (window.confirm('Delete this accommodation?')) {
+                                        fetch(`/api/accommodations/${acc.id}`, { method: 'DELETE' })
+                                            .then(() => {
+                                                onAccommodationChange();
+                                                setStatus({ message: 'Accommodation deleted!', type: 'success' });
+                                                setTimeout(() => setStatus(null), 3000);
+                                            });
+                                    }
+                                },
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'trash-2', size: 16 }), 'Delete')
+                        )
+                    ))
+                )
+            );
+        };
+
+        const PostsManager = ({ posts, onPostChange }) => {
+            return e('div', { className: 'space-y-8' },
+                e('div', { className: 'glass-card rounded-2xl p-8' },
+                    e('h2', { className: 'text-2xl font-bold mb-6 flex items-center gap-2' },
+                        e(LucideIcon, { name: 'pen-tool', className: 'text-indigo-400', size: 24 }), 'Create New Post'
+                    ),
+                    e('form', {
+                        action: '/api/posts', method: 'post', encType: 'multipart/form-data',
+                        onSubmit: (ev) => {
+                            ev.preventDefault();
+                            const formData = new FormData(ev.target);
+                            fetch('/api/posts', { method: 'POST', body: formData }).then(() => { onPostChange(); ev.target.reset(); }).catch(console.error);
+                        },
+                        className: 'space-y-4'
+                    }, 
+                        e('div', null, e('label', { className: 'block text-sm font-medium text-gray-400 mb-1' }, 'Title'), e(Input, { type: 'text', name: 'title', id: 'title', placeholder: 'Post title' })),
+                        e('div', null, e('label', { className: 'block text-sm font-medium text-gray-400 mb-1' }, 'Content'), e('textarea', { name: 'content', id: 'content', placeholder: 'What\'s on your mind?', className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all', rows: 4 })),
+                        e('div', null, e('label', { className: 'block text-sm font-medium text-gray-400 mb-1' }, 'Upload Image'), e(Input, { type: 'file', name: 'image', id: 'image', className: 'file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer' })),
+                        e(Button, { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-500 text-white w-full' }, 'Post Update')
+                    )
+                ),
+                e('div', { className: 'glass-card rounded-2xl p-8' },
+                    e('h2', { className: 'text-2xl font-bold mb-6' }, 'Existing Posts'),
+                    e('div', { className: 'space-y-6' },
+                        posts.map(post => e(Post, { key: post.id, post, onPostChange: onPostChange }))
+                    )
+                )
+            );
+        };
+
+        const BursariesManager = ({ bursaries, onBursaryChange }) => {
+            const [editingId, setEditingId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [status, setStatus] = useState(null);
+            const formRef = React.useRef();
+
+            const startEdit = (b) => {
+                setEditingId(b.id);
+                const form = formRef.current;
+                form.name.value = b.name;
+                form.provider.value = b.provider;
+                form.field_of_study.value = b.field_of_study;
+                form.eligibility.value = b.eligibility;
+                form.closing_date.value = b.closing_date;
+                form.link.value = b.link;
+                form.phone_number.value = b.phone_number || '';
+                window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
+            };
+
+            const onSubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(ev.target);
+                const url = editingId ? `/api/bursaries/${editingId}` : '/api/bursaries';
+                fetch(url, { method: 'POST', body: formData }).then(res => {
+                    if (res.ok) {
+                        onBursaryChange();
+                        ev.target.reset();
+                        setEditingId(null);
+                        setStatus({ message: editingId ? 'Bursary updated!' : 'Bursary added!', type: 'success' });
+                        setTimeout(() => setStatus(null), 3000);
+                    }
+                }).catch(err => {
+                    setStatus({ message: 'Error: ' + err.message, type: 'error' });
+                    setTimeout(() => setStatus(null), 5000);
+                });
+            };
+
+            const filtered = bursaries.filter(b =>
+                b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                b.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                b.field_of_study.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            return e('div', { className: 'glass-card rounded-2xl p-8' },
+                e('h2', { className: 'text-2xl font-bold mb-6 flex items-center gap-3' },
+                    e(LucideIcon, { name: 'graduation-cap', className: 'text-green-400', size: 24 }),
+                    editingId ? 'Edit Bursary' : 'Manage Bursaries'
+                ),
+                e('form', { ref: formRef, onSubmit, className: 'grid gap-6 mb-8' },
+                    status && e('div', { className: `p-4 rounded-xl text-sm font-medium ${status.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}` }, status.message),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        e(Input, { type: 'text', name: 'name', placeholder: 'Bursary Name', required: true }),
+                        e(Input, { type: 'text', name: 'provider', placeholder: 'Provider', required: true }),
+                        e(Input, { type: 'text', name: 'field_of_study', placeholder: 'Field of Study', required: true }),
+                        e(Input, { type: 'text', name: 'eligibility', placeholder: 'Eligibility', required: true }),
+                        e(Input, { type: 'text', name: 'closing_date', placeholder: 'Closing Date (YYYY-MM-DD)', required: true }),
+                        e(Input, { type: 'text', name: 'link', placeholder: 'Link', required: true }),
+                        e(Input, { type: 'text', name: 'phone_number', placeholder: 'Phone Number' }),
+                        e(Input, { type: 'file', name: 'picture', className: 'file:text-white' })
+                    ),
+                    e('div', { className: 'flex gap-4' },
+                        e(Button, { type: 'submit', className: 'bg-green-600 hover:bg-green-500 text-white flex-1' }, editingId ? 'Update Bursary' : 'Add Bursary'),
+                        editingId && e(Button, { type: 'button', onClick: () => { setEditingId(null); formRef.current.reset(); }, className: 'bg-gray-700 hover:bg-gray-600 text-white' }, 'Cancel')
+                    )
+                ),
+                e('div', { className: 'mb-4 relative' },
+                    e('div', { className: 'absolute left-3 top-3' }, e(LucideIcon, { name: 'search', className: 'text-gray-400', size: 20 })),
+                    e(Input, {
+                        type: 'text',
+                        placeholder: 'Search bursaries...',
+                        value: searchTerm,
+                        onChange: (e) => setSearchTerm(e.target.value),
+                        className: 'pl-10'
+                    })
+                ),
+                e('div', { className: 'grid gap-4' },
+                    filtered.map(bursary => e('div', { key: bursary.id, className: 'bg-gray-800 border border-gray-700 p-4 rounded-xl flex justify-between items-center hover:border-green-500/30' },
+                        e('div', { className: 'flex items-center gap-4' },
+                            bursary.picture_path && e('img', { src: `/${bursary.picture_path}`, className: 'w-12 h-12 object-cover rounded-lg border border-gray-700' }),
+                            e('div', null,
+                                e('p', { className: 'font-bold text-white' }, bursary.name),
+                                e('p', { className: 'text-sm text-gray-400' }, bursary.provider)
+                            )
+                        ),
+                        e('div', { className: 'flex gap-2' },
+                            e('button', {
+                                onClick: () => startEdit(bursary),
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-green-400 hover:bg-green-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'edit-2', size: 16 }), 'Edit'),
+                            e('button', {
+                                onClick: () => {
+                                    if (window.confirm('Delete this bursary?')) {
+                                        fetch(`/api/bursaries/${bursary.id}`, { method: 'DELETE' })
+                                            .then(() => {
+                                                onBursaryChange();
+                                                setStatus({ message: 'Bursary deleted!', type: 'success' });
+                                                setTimeout(() => setStatus(null), 3000);
+                                            });
+                                    }
+                                },
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'trash-2', size: 16 }), 'Delete')
+                        )
+                    ))
+                )
+            );
+        };
+
+        const LearnershipsManager = ({ learnerships, onLearnershipChange }) => {
+            const [editingId, setEditingId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [status, setStatus] = useState(null);
+            const formRef = React.useRef();
+
+            const startEdit = (l) => {
+                setEditingId(l.id);
+                const form = formRef.current;
+                form.title.value = l.title;
+                form.company.value = l.company;
+                form.stipend.value = l.stipend || '';
+                form.duration.value = l.duration;
+                form.nqf_level.value = l.nqf_level;
+                form.location.value = l.location;
+                form.url.value = l.url;
+                form.phone_number.value = l.phone_number || '';
+                window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
+            };
+
+            const onSubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(ev.target);
+                const url = editingId ? `/api/learnerships/${editingId}` : '/api/learnerships';
+                fetch(url, { method: 'POST', body: formData }).then(res => {
+                    if (res.ok) {
+                        onLearnershipChange();
+                        ev.target.reset();
+                        setEditingId(null);
+                        setStatus({ message: editingId ? 'Learnership updated!' : 'Learnership added!', type: 'success' });
+                        setTimeout(() => setStatus(null), 3000);
+                    }
+                }).catch(err => {
+                    setStatus({ message: 'Error: ' + err.message, type: 'error' });
+                    setTimeout(() => setStatus(null), 5000);
+                });
+            };
+
+            const filtered = learnerships.filter(l =>
+                l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.location.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            return e('div', { className: 'glass-card rounded-2xl p-8' },
+                e('h2', { className: 'text-2xl font-bold mb-6 flex items-center gap-3' },
+                    e(LucideIcon, { name: 'briefcase', className: 'text-yellow-400', size: 24 }),
+                    editingId ? 'Edit Learnership' : 'Manage Learnerships'
+                ),
+                e('form', { ref: formRef, onSubmit, className: 'grid gap-6 mb-8' },
+                    status && e('div', { className: `p-4 rounded-xl text-sm font-medium ${status.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}` }, status.message),
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        e(Input, { type: 'text', name: 'title', placeholder: 'Title', required: true }),
+                        e(Input, { type: 'text', name: 'company', placeholder: 'Company', required: true }),
+                        e(Input, { type: 'number', name: 'stipend', placeholder: 'Stipend' }),
+                        e(Input, { type: 'text', name: 'duration', placeholder: 'Duration', required: true }),
+                        e(Input, { type: 'number', name: 'nqf_level', placeholder: 'NQF Level', required: true }),
+                        e(Input, { type: 'text', name: 'location', placeholder: 'Location (Province or National)', required: true }),
+                        e(Input, { type: 'text', name: 'url', placeholder: 'URL', required: true }),
+                        e(Input, { type: 'text', name: 'phone_number', placeholder: 'Phone Number' }),
+                        e(Input, { type: 'file', name: 'picture', className: 'file:text-white' })
+                    ),
+                    e('div', { className: 'flex gap-4' },
+                        e(Button, { type: 'submit', className: 'bg-yellow-600 hover:bg-yellow-500 text-white flex-1' }, editingId ? 'Update Learnership' : 'Add Learnership'),
+                        editingId && e(Button, { type: 'button', onClick: () => { setEditingId(null); formRef.current.reset(); }, className: 'bg-gray-700 hover:bg-gray-600 text-white' }, 'Cancel')
+                    )
+                ),
+                e('div', { className: 'mb-4 relative' },
+                    e('div', { className: 'absolute left-3 top-3' }, e(LucideIcon, { name: 'search', className: 'text-gray-400', size: 20 })),
+                    e(Input, {
+                        type: 'text',
+                        placeholder: 'Search learnerships...',
+                        value: searchTerm,
+                        onChange: (e) => setSearchTerm(e.target.value),
+                        className: 'pl-10'
+                    })
+                ),
+                e('div', { className: 'grid gap-4' },
+                    filtered.map(l => e('div', { key: l.id, className: 'bg-gray-800 border border-gray-700 p-4 rounded-xl flex justify-between items-center hover:border-yellow-500/30' },
+                        e('div', { className: 'flex items-center gap-4' },
+                            l.picture_path && e('img', { src: `/${l.picture_path}`, className: 'w-12 h-12 object-cover rounded-lg border border-gray-700' }),
+                            e('div', null,
+                                e('p', { className: 'font-bold text-white' }, l.title),
+                                e('p', { className: 'text-sm text-gray-400' }, `${l.company} (${l.location})`)
+                            )
+                        ),
+                        e('div', { className: 'flex gap-2' },
+                            e('button', {
+                                onClick: () => startEdit(l),
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'edit-2', size: 16 }), 'Edit'),
+                            e('button', {
+                                onClick: () => {
+                                    if (window.confirm('Delete this learnership?')) {
+                                        fetch(`/api/learnerships/${l.id}`, { method: 'DELETE' })
+                                            .then(() => {
+                                                onLearnershipChange();
+                                                setStatus({ message: 'Learnership deleted!', type: 'success' });
+                                                setTimeout(() => setStatus(null), 3000);
+                                            });
+                                    }
+                                },
+                                className: 'flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors'
+                            }, e(LucideIcon, { name: 'trash-2', size: 16 }), 'Delete')
+                        )
+                    ))
+                )
+            );
+        };
+
+        const Header = () => {
+            return e('header', { className: 'border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-50' },
+                e('div', { className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center' },
+                    e('a', { href: '/admin', className: 'flex items-center gap-2' },
+                        e('div', { className: 'w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg' },
+                            e(LucideIcon, { name: 'shield-check', className: 'text-white', size: 24 })
+                        ),
+                        e('span', { className: 'text-xl font-bold text-white' }, 'SafeLearn ', e('span', { className: 'text-indigo-400 text-sm uppercase tracking-wider' }, 'Admin'))
+                    ),
+                    e('div', { className: 'flex items-center gap-4' },
+                        e('a', { href: '/', className: 'text-sm font-medium text-gray-400 hover:text-white transition-colors' }, 'View Site'),
+                        e('a', { href: '/api/logout', className: 'px-4 py-2 rounded-lg bg-gray-800 hover:bg-red-500/10 text-gray-300 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all font-medium text-sm' }, 'Logout')
+                    )
+                )
+            );
+        };
+
+        const Comment = ({ comment, post, onCommentPosted }) => {
+            const [showReplyForm, setShowReplyForm] = useState(false);
+            const [reply, setReply] = useState('');
+
+            const handleReplySubmit = (e) => {
+                e.preventDefault();
+                if (reply.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: reply, parent_id: comment.id })
+                    })
+                        .then(() => { setReply(''); setShowReplyForm(false); onCommentPosted(); })
+                        .catch(console.error);
+                }
+            };
+
+            return e('div', { className: 'pl-4 border-l-2 border-gray-700 mt-3' },
+                e('div', { className: 'text-sm bg-gray-800/50 p-3 rounded-lg border border-gray-700' },
+                    e('p', { className: 'text-gray-300 mb-2' }, renderTextWithLinks(comment.comment)),
+                    e('div', { className: 'flex items-center justify-between text-xs text-gray-500' },
+                        e('span', null, new Date(comment.created_at).toLocaleString()),
+                        e('button', { onClick: () => setShowReplyForm(!showReplyForm), className: 'text-indigo-400 hover:text-indigo-300 font-medium' }, 'Reply')
+                    )
+                ),
+                showReplyForm && e('form', { onSubmit: handleReplySubmit, className: 'mt-2 ml-2' },
+                    e('div', { className: 'flex items-center gap-2' },
+                        e('input', {
+                            type: 'text', placeholder: 'Write a reply...', value: reply, onChange: (e) => setReply(e.target.value),
+                            className: 'flex-grow p-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm'
+                        }),
+                        e('button', { type: 'submit', className: 'bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg' }, 'Send')
+                    )
+                ),
+                comment.children && e('div', { className: 'mt-2' },
+                    comment.children.map(child => e(Comment, { key: child.id, comment: child, post, onCommentPosted }))
+                )
+            );
+        }
+
+        const Post = ({ post, onPostChange }) => {
+            const [likes, setLikes] = useState(post.likes);
+            const [comments, setComments] = useState([]);
+            const [showComments, setShowComments] = useState(false);
+            const [newComment, setNewComment] = useState('');
+            const [isEditing, setIsEditing] = useState(false);
+            const [editTitle, setEditTitle] = useState(post.title || '');
+            const [editContent, setEditContent] = useState(post.content || '');
+            const [editImage, setEditImage] = useState(null);
+
+            const fetchComments = () => {
+                fetch(`/api/posts/${post.id}/comments`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const commentsById = {};
+                        data.forEach(comment => commentsById[comment.id] = { ...comment, children: [] });
+                        const nestedComments = [];
+                        data.forEach(comment => {
+                            if (comment.parent_id && commentsById[comment.parent_id]) {
+                                commentsById[comment.parent_id].children.push(commentsById[comment.id]);
+                            } else {
+                                nestedComments.push(commentsById[comment.id]);
+                            }
+                        });
+                        setComments(nestedComments);
+                    })
+                    .catch(console.error);
+            };
+
+            useEffect(() => { if (showComments) fetchComments(); }, [showComments, post.id]);
+
+            const handleDelete = () => {
+                if (window.confirm('Are you sure you want to delete this post?')) {
+                    fetch(`/api/posts/${post.id}`, { method: 'DELETE' }).then(() => onPostChange()).catch(console.error);
+                }
+            };
+
+            const handleUpdate = (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('title', editTitle);
+                formData.append('content', editContent);
+                if (editImage) formData.append('image', editImage);
+
+                fetch(`/api/posts/${post.id}`, { method: 'POST', body: formData }).then(() => { setIsEditing(false); onPostChange(); }).catch(console.error);
+            };
+
+            const handleLike = () => {
+                const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+                if (!likedPosts.includes(post.id)) {
+                    fetch(`/api/posts/${post.id}/like`, { method: 'POST' })
+                        .then(() => {
+                            setLikes(likes + 1);
+                            localStorage.setItem('likedPosts', JSON.stringify([...likedPosts, post.id]));
+                        })
+                        .catch(console.error);
+                } else {
+                    alert('You have already liked this post.');
+                }
+            };
+
+            const handleCommentSubmit = (e) => {
+                e.preventDefault();
+                if (newComment.trim()) {
+                    fetch(`/api/posts/${post.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment: newComment })
+                    })
+                        .then(() => { setNewComment(''); fetchComments(); })
+                        .catch(console.error);
+                }
+            };
+
+            return e('div', { className: 'bg-gray-800 border border-gray-700 rounded-xl overflow-hidden' },
+                isEditing ?
+                    e('form', { onSubmit: handleUpdate, encType: 'multipart/form-data', className: 'p-6 space-y-4' },
+                        e('div', null, e('label', { className: 'block text-sm text-gray-400 mb-1' }, 'Title'), e(Input, { type: 'text', name: 'editTitle', value: editTitle, onChange: (e) => setEditTitle(e.target.value) })),
+                        e('div', null, e('label', { className: 'block text-sm text-gray-400 mb-1' }, 'Content'), e('textarea', { name: 'editContent', className: 'w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500', rows: 4, value: editContent, onChange: (e) => setEditContent(e.target.value) })),
+                        e('div', null, e('label', { className: 'block text-sm text-gray-400 mb-1' }, 'Change Image'), e('input', { type: 'file', className: 'block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600', onChange: (e) => setEditImage(e.target.files[0]) })),
+                        e('div', { className: 'flex gap-2' },
+                            e(Button, { type: 'submit', className: 'bg-green-600 hover:bg-green-500 text-white' }, 'Save'),
+                            e(Button, { type: 'button', onClick: () => setIsEditing(false), className: 'bg-gray-700 hover:bg-gray-600 text-white' }, 'Cancel')
+                        )
+                    )
+                    :
+                    e('div', { className: 'p-6' },
+                        e('div', { className: 'flex justify-between items-start mb-4' },
+                            e('h3', { className: 'text-xl font-bold text-white' }, renderTextWithLinks(post.title)),
+                            e('span', { className: 'text-xs text-gray-500 bg-gray-900 px-2 py-1 rounded' }, new Date(post.created_at).toLocaleString())
+                        ),
+                        e('p', { className: 'text-gray-300' }, renderTextWithLinks(post.content)),
+                        post.image_path && e('img', { src: `/${post.image_path}`, className: 'mt-4 rounded-xl border border-gray-700 max-h-96 w-full object-cover' }),
+                        e('div', { className: 'flex items-center justify-between mt-6 pt-4 border-t border-gray-700' },
+                            e('div', { className: 'flex items-center gap-4' },
+                                e('button', { onClick: handleLike, className: 'flex items-center gap-2 text-gray-400 hover:text-indigo-400 transition-colors' }, e(LucideIcon, { name: 'thumbs-up', size: 20 }), likes),
+                                e('button', { onClick: () => setShowComments(!showComments), className: 'flex items-center gap-2 text-gray-400 hover:text-indigo-400 transition-colors' }, e(LucideIcon, { name: 'message-circle', size: 20 }), 'Comments')
+                            ),
+                            e('div', { className: 'flex items-center gap-4' },
+                                e('button', { onClick: () => setIsEditing(true), className: 'flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors' }, e(LucideIcon, { name: 'edit', size: 16 }), 'Edit'),
+                                e('button', { onClick: handleDelete, className: 'flex items-center gap-1 text-sm text-red-400 hover:text-red-300 transition-colors' }, e(LucideIcon, { name: 'trash', size: 16 }), 'Delete')
+                            )
+                        ),
+                        showComments && e('div', { className: 'mt-6 bg-gray-900/30 rounded-xl p-4 border border-gray-700' },
+                            e('h4', { className: 'text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider' }, 'Comments'),
+                            e('div', { className: 'space-y-4 max-h-64 overflow-y-auto mb-4 custom-scrollbar' },
+                                comments.map(comment => e(Comment, { key: comment.id, comment, post, onCommentPosted: fetchComments }))
+                            ),
+                            e('form', { onSubmit: handleCommentSubmit, className: 'flex items-center gap-3' },
+                                e('input', {
+                                    type: 'text', placeholder: 'Write a comment...', value: newComment, onChange: (e) => setNewComment(e.target.value),
+                                    className: 'flex-grow p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-colors'
+                                }),
+                                e('button', { type: 'submit', className: 'p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors' }, e(LucideIcon, { name: 'send', size: 20 }))
+                            )
+                        )
+                    )
+            );
+        };
+
+        ReactDOM.render(e(AdminDashboard), document.getElementById('root'));
+    </script>
+</body>
+
+</html>

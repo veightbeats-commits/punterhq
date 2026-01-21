@@ -1,0 +1,138 @@
+node_modules
+
+# Additional ignores for home-level unwanted files
+Documents/gemini cli/safelearn/
+Documents/gemini cli/Borderless Finance/
+Documents/gemini cli/CLINICALLY MEDICAL WASTE BUSINESS PROFILE/
+Documents/gemini cli/New folder/
+Documents/gemini cli/OpenCode Desktop Installer.exe
+Documents/gemini cli/PHQ/
+Documents/gemini cli/SGAGA/
+Documents/gemini cli/WarpSetup.exe
+Documents/gemini cli/borderless.finance---financial-modeling-suite.zip
+Documents/gemini cli/food delivery app/
+Documents/gemini cli/km-hygiene-&-waste-management/
+Documents/gemini cli/my-app.zip
+Documents/gemini cli/p2p spares/
+Documents/gemini cli/punter-hq-strategy*.png
+Documents/gemini cli/qcto modules/
+Documents/gemini cli/sise med/
+Documents/gemini cli/studybuddyAI/
+Documents/gemini cli/tkz steels/
+Documents/gemini cli/un res data/
+Documents/gemini cli/vidz/
+Documents/12
+Documents/2023/
+Documents/Authorizing Ableton Live Offline.txt
+Documents/Camtasia/
+Documents/Celemony/
+Documents/Codemasters/
+Documents/Desktop/
+Documents/FabFilter/
+Documents/Image-Line/
+Documents/KORG Gadget/
+Documents/Lefa s M.pdf
+Documents/LennarDigital/
+Documents/MP BUSINESSPLANS/
+Documents/MUM CATHY/
+Documents/Max 8/
+Documents/My Games/
+Documents/My Music/
+Documents/My Pictures/
+Documents/My Videos/
+Documents/NKOSIMPHILE/
+Documents/Native Instruments/
+Documents/Occupational Certificate Clearing and Forwarding Agent/
+Documents/Project_28.mp3
+Documents/Proof Of PaymentCopy/
+Documents/Ratego dox/
+Documents/Studio One/
+Documents/VST3 Presets/
+Documents/Xfer/
+Documents/account_statement_1-Dec-2025_to_5-Jan-2026.pdf
+Documents/account_statement_1-Dec-2025_to_5-Jan-2026Copy/
+Documents/account_statement_1-Dec-2025_to_7-Jan-2026.pdf
+Documents/account_statement_1-Dec-2025_to_7-Jan-2026/
+Documents/account_statement_1-Dec-2025_to_7-Jan-2026Copy/
+Documents/apps/
+Documents/automobile/
+Documents/borderless online/
+Documents/buhle state.pdf
+Documents/buhle statement.pdf
+Documents/buhle statementCopy.pdf
+Documents/buhle statementCopy/
+Documents/business plan/
+Documents/cosmatic business plan/
+Documents/desktop.ini
+Documents/electrician/
+Documents/kiloHearts/
+Documents/lefa s.pdf
+Documents/lefa/
+Documents/licensevalidation.txt
+Documents/skuta pix/
+Documents/thulaniCopy.pdf
+Documents/welder/
+.affinity/
+.antigravity/
+.bash_history
+.bun/
+.bundle/
+.cache/
+.codeium/
+.cursor/
+.dbus-keyrings/
+.docker/
+.emulator_console_auth_token
+.gem/
+.gemini/
+.gimp-2.8/
+.gitconfig
+.gradle/
+.local/
+.node_repl_history
+.npmrc
+.swt/
+.thumbnails/
+.vscode/
+.windsurf/
+AppData/
+Application Data/
+Contacts/
+Cookies/
+CryptoScan_Results.txt
+Desktop.flp
+Desktop/
+Downloads/
+Favorites/
+IMG-20240314-WA0021.xcf
+IntelGraphicsProfiles/
+LEBO.jpg
+Links/
+Local Settings/
+Music/
+My Documents/
+NTUSER.DAT
+NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TM.blf
+NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TMContainer00000000000000000001.regtrans-ms
+NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TMContainer00000000000000000002.regtrans-ms
+OneDrive/
+Pictures/
+Recent/
+Saved Games/
+Searches/
+SendTo/
+Start Menu/
+ToneEmpire/
+Videos/
+apps
+bitmap.png
+devid
+drawing.svg
+grey.png
+grey.xcf
+ntuser.dat.LOG1
+ntuser.dat.LOG2
+ntuser.ini
+package-lock.json
+package.json
+webapp/

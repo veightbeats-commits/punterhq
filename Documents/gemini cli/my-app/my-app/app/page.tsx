@@ -11,7 +11,7 @@ import { StatusRow } from "@/components/status-row"
 import { PostCard } from "@/components/post-card"
 import { createClientComponentClient } from "@/lib/supabase"
 
-export const revalidate = 60
+
 
 interface Post {
   id: number

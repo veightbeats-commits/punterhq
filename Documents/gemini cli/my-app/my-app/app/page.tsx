@@ -1,8 +1,11 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, TrendingUp, ChevronRight, Activity, Zap } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useState, useEffect } from "react"
 
 import { StatusRow } from "@/components/status-row"
 import { PostCard } from "@/components/post-card"
@@ -25,7 +28,7 @@ interface StatusCardItem {
   name: string
   image_url: string
   betway_link: string
-  social_link?: string | null
+  social_link?: string
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -57,29 +60,49 @@ function getSafeImageUrl(raw: string | null): string {
   }
 }
 
-export default async function HomePage() {
-  const supabase = await createClient()
+export default function HomePage() {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [statusCards, setStatusCards] = useState<StatusCardItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const [postsResult, statusCardsResult] = await Promise.all([
-    supabase.from("posts").select("*").order("created_at", { ascending: false }),
-    supabase
-      .from("status_cards")
-      .select("id, name, image_url, betway_link, social_link")
-      .order("created_at", { ascending: false }),
-  ])
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = await createClient()
+      const [postsResult, statusCardsResult] = await Promise.all([
+        supabase.from("posts").select("*").order("created_at", { ascending: false }),
+        supabase
+          .from("status_cards")
+          .select("id, name, image_url, betway_link, social_link")
+          .order("created_at", { ascending: false }),
+      ])
 
-  const { data: posts, error: postsError } = postsResult
-  const { data: statusCards, error: statusCardsError } = statusCardsResult
+      const { data: postsData, error: postsError } = postsResult
+      const { data: statusCardsData, error: statusCardsError } = statusCardsResult
 
-  if (postsError) {
-    console.error("Error fetching posts on home page:", postsError)
-    throw new Error("Failed to load posts")
+      if (postsError) {
+        console.error("Error fetching posts on home page:", postsError)
+        throw new Error("Failed to load posts")
+      }
+
+      if (statusCardsError) {
+        console.error("Error fetching status cards on home page:", statusCardsError)
+        throw new Error("Failed to load status cards")
+      }
+
+      setPosts(postsData || [])
+      setStatusCards(statusCardsData as StatusCardItem[] || [])
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return <div>Loading...</div>
   }
 
-  if (statusCardsError) {
-    console.error("Error fetching status cards on home page:", statusCardsError)
-    throw new Error("Failed to load status cards")
-  }
+
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -174,16 +197,24 @@ export default async function HomePage() {
         {/* Responsible Gambling Section */}
         <div className="space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-2xl md:text-3xl font-bold font-mono uppercase flex items-center justify-center gap-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-2xl md:text-3xl font-bold font-mono uppercase flex items-center justify-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <span className="w-3 h-8 bg-red-500 skew-x-[-20deg]"></span>
               <span className="text-red-500">Responsible Gambling</span>
-            </h2>
-            <p className="text-muted-foreground max-w-3xl mx-auto">
-              At Punter HQ, we are committed to promoting responsible gambling practices and ensuring a safe betting environment for all users.
-            </p>
+              <ChevronRight className={`w-6 h-6 text-red-500 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className={isExpanded ? "block" : "hidden"}>
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground max-w-3xl mx-auto">
+                At Punter HQ, we are committed to promoting responsible gambling practices and ensuring a safe betting environment for all users.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Policies */}
             <Card className="border-border/50 bg-background/80 backdrop-blur-sm">
               <CardHeader>
@@ -313,6 +344,7 @@ export default async function HomePage() {
             <Link href="/contact" className="text-primary hover:underline underline-offset-2">
               Contact Support
             </Link>
+          </div>
           </div>
         </div>
       </div>

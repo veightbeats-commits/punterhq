@@ -509,26 +509,7 @@ export default function StrategyCalculator() {
     }
   }
 
-  const shareToX = async () => {
-    await downloadImage()
-    const text = `Check out my betting strategy on Punter HQ! 💰 Starting: ${formatCurrency(startingWager)} → Final: ${formatCurrency(finalTotal)} | Profit: ${profitPercentage}%`
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank")
-  }
 
-  const shareToFacebook = async () => {
-    try {
-      const blob = await generateStrategyCard(theme)
-      await downloadImage() // Keep download as fallback
-      const imageUrl = await uploadToImgur(blob)
-      const text = `Check out my betting strategy on Punter HQ! 💰\n\nStarting: ${formatCurrency(startingWager)}\nFinal Total: ${formatCurrency(finalTotal)}\nProfit: ${formatCurrency(totalProfit)} (${profitPercentage}%)`
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}&quote=${encodeURIComponent(text)}`, "_blank")
-    } catch (error) {
-      console.error('Failed to share to Facebook:', error)
-      // Fallback to link sharing
-      const text = `Check out my betting strategy on Punter HQ! 💰\n\nStarting: ${formatCurrency(startingWager)}\nFinal Total: ${formatCurrency(finalTotal)}\nProfit: ${formatCurrency(totalProfit)} (${profitPercentage}%)`
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(text)}`, "_blank")
-    }
-  }
 
   const shareToInstagram = async () => {
     await downloadImage()
@@ -578,13 +559,7 @@ export default function StrategyCalculator() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-accent/50 p-2">
                 <DropdownMenuItem onClick={shareToWhatsApp} className="cursor-pointer font-mono font-bold hover:bg-accent hover:text-white focus:bg-accent focus:text-white">
-                  SHARE TO WHATSAPP
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={shareToX} className="cursor-pointer font-mono font-bold hover:bg-accent hover:text-white focus:bg-accent focus:text-white">
-                  SHARE TO X (TWITTER)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={shareToFacebook} className="cursor-pointer font-mono font-bold hover:bg-accent hover:text-white focus:bg-accent focus:text-white">
-                  SHARE TO FACEBOOK
+                  SHARE TO SOCIALMEDIA
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

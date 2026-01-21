@@ -493,7 +493,7 @@ export default function StrategyCalculator() {
 
     await downloadImage()
 
-    const text = `Check out my betting strategy on Punter HQ! 💰\n\nStarting: ${formatCurrency(startingWager)}\nFinal Total: ${formatCurrency(finalTotal)}\nProfit: ${formatCurrency(totalProfit)} (${profitPercentage}%)`
+    const text = `Check out my betting strategy on Punter HQ! 💰\n\nStarting: ${formatCurrency(startingWager)}\nFinal Total: ${formatCurrency(finalTotal)}\nProfit: ${formatCurrency(totalProfit)} (${profitPercentage}%)\n\nhttps://www.punterhq.online/\n\n#punterhq #strategy #betway #betwaycodes #holywoodbets #betting`
 
     if (navigator.share) {
       try {

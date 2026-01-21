@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Sun, Moon, LayoutGrid, TableIcon, Share2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useTheme } from "next-themes"
+import { useSession } from "@/components/session-provider"
 
 interface DayData {
   day: number
@@ -28,12 +30,28 @@ export default function StrategyCalculator() {
   const [numberOfDays, setNumberOfDays] = useState<number>(10)
   const [tableData, setTableData] = useState<DayData[]>([])
   const [viewMode, setViewMode] = useState<"table" | "calendar">("table")
+  const [downloadsUsed, setDownloadsUsed] = useState<number>(0)
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter()
+  const { session } = useSession()
   /* Local theme state removed to support global theme persistence */
 
   useEffect(() => {
     generateTableData()
   }, [startingWager, defaultOdds, numberOfDays])
+
+  useEffect(() => {
+    const stored = localStorage.getItem('strategyDownloads')
+    setDownloadsUsed(stored ? parseInt(stored, 10) : 0)
+  }, [])
+
+  useEffect(() => {
+    if (session?.user) {
+      // Reset downloads for authenticated users
+      localStorage.setItem('strategyDownloads', '0')
+      setDownloadsUsed(0)
+    }
+  }, [session])
 
   const generateTableData = () => {
     const data: DayData[] = []
@@ -457,6 +475,11 @@ export default function StrategyCalculator() {
   }
 
   const downloadImage = async () => {
+    if (!session?.user && downloadsUsed >= 3) {
+      router.push('/signup?message=Sign up for unlimited strategy downloads')
+      return
+    }
+
     const blob = await generateStrategyCard(theme)
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -466,6 +489,10 @@ export default function StrategyCalculator() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+
+    const newCount = downloadsUsed + 1
+    setDownloadsUsed(newCount)
+    localStorage.setItem('strategyDownloads', newCount.toString())
   }
 
   const uploadToImgur = async (blob: Blob): Promise<string> => {
@@ -532,6 +559,11 @@ export default function StrategyCalculator() {
               STRATEGY <span className="text-foreground">TERMINAL</span>
             </h1>
             <p className="text-muted-foreground font-mono mt-2">/// CALCULATE. EXECUTE. WIN. ///</p>
+            {!session?.user && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Downloads used: {downloadsUsed}/3 (Sign up for unlimited access)
+              </p>
+            )}
           </div>
 
           {/* Massive Action Buttons */}

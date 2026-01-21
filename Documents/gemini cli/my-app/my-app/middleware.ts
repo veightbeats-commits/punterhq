@@ -40,8 +40,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  // if user is not signed in and the current path is not /login or /signup, redirect the user to /login
-  if (!user && req.nextUrl.pathname !== '/login' && req.nextUrl.pathname !== '/signup') {
+  // Allow anonymous access to public pages; restrict only admin routes
+  const protectedRoutes = ['/admin', '/profile']
+  const isProtectedRoute = protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route))
+
+  if (!user && isProtectedRoute && req.nextUrl.pathname !== '/login' && req.nextUrl.pathname !== '/signup') {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 

@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 
 import { StatusRow } from "@/components/status-row"
 import { PostCard } from "@/components/post-card"
-import { createClient } from "@/lib/supabase-server"
+import { createClientComponentClient } from "@/lib/supabase"
 
 export const revalidate = 60
 
@@ -68,7 +68,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = await createClient()
+      const supabase = createClientComponentClient()
       const [postsResult, statusCardsResult] = await Promise.all([
         supabase.from("posts").select("*").order("created_at", { ascending: false }),
         supabase

@@ -37,7 +37,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('role, username, avatar_url')
           .eq('id', initialSession.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile:', error);
@@ -68,7 +68,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('role, username, avatar_url')
           .eq('id', newSession.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile on auth state change:', error);

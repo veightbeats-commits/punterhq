@@ -25,7 +25,7 @@ export default function StrategyCalculator() {
   const [startingWager, setStartingWager] = useState<number>(100)
   const [defaultOdds, setDefaultOdds] = useState<number>(1.5)
   const [usePercentage, setUsePercentage] = useState<boolean>(false)
-  const [numberOfDays, setNumberOfDays] = useState<number>(30)
+  const [numberOfDays, setNumberOfDays] = useState<number>(10)
   const [tableData, setTableData] = useState<DayData[]>([])
   const [viewMode, setViewMode] = useState<"table" | "calendar">("table")
   const canvasRef = useRef<HTMLCanvasElement>(null);

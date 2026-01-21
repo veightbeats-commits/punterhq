@@ -1,0 +1,1 @@
+CREATE TABLE user_favorites (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, status_card_id UUID REFERENCES status_cards(id) ON DELETE CASCADE, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(), UNIQUE(user_id, status_card_id));

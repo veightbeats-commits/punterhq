@@ -1,0 +1,184 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+
+# Additional ignores for safelearn and system files
+../../safelearn/
+../../../../.affinity/
+../../../../.antigravity/
+../../../../.bash_history
+../../../../.bun/
+../../../../.bundle/
+../../../../.cache/
+../../../../.codeium/
+../../../../.cursor/
+../../../../.dbus-keyrings/
+../../../../.docker/
+../../../../.emulator_console_auth_token
+../../../../.gem/
+../../../../.gemini/
+../../../../.gimp-2.8/
+../../../../.gitconfig
+../../../../.gitignore
+../../../../.gradle/
+../../../../.local/
+../../../../.node_repl_history
+../../../../.npmrc
+../../../../.swt/
+../../../../.thumbnails/
+../../../../.vscode/
+../../../../.windsurf/
+../../../../AppData/
+../../../../Application Data/
+../../../../Contacts/
+../../../../CryptoScan_Results.txt
+../../../../Desktop.flp
+../../../../Desktop/
+../../../12
+../../../2023/
+../../../Authorizing Ableton Live Offline.txt
+../../../Camtasia/
+../../../Celemony/
+../../../Codemasters/
+../../../Desktop/
+../../../FabFilter/
+../../../Image-Line/
+../../../KORG Gadget/
+../../../Lefa s M.pdf
+../../../LennarDigital/
+../../../MP BUSINESSPLANS/
+../../../MUM CATHY/
+../../../Max 8/
+../../../My Games/
+../../../My Music/
+../../../My Pictures/
+../../../My Videos/
+../../../NKOSIMPHILE/
+../../../Native Instruments/
+../../../Occupational Certificate Clearing and Forwarding Agent/
+../../../Project_28.mp3
+../../../Proof Of PaymentCopy/
+../../../Ratego dox/
+../../../Studio One/
+../../../VST3 Presets/
+../../../Xfer/
+../../../account_statement_1-Dec-2025_to_5-Jan-2026.pdf
+../../../account_statement_1-Dec-2025_to_5-Jan-2026Copy/
+../../../account_statement_1-Dec-2025_to_7-Jan-2026.pdf
+../../../account_statement_1-Dec-2025_to_7-Jan-2026/
+../../../account_statement_1-Dec-2025_to_7-Jan-2026Copy/
+../../../apps/
+../../../automobile/
+../../../borderless online/
+../../../buhle state.pdf
+../../../buhle statement.pdf
+../../../buhle statementCopy.pdf
+../../../buhle statementCopy/
+../../../business plan/
+../../../cosmatic business plan/
+../../../desktop.ini
+../../../electrician/
+../../Borderless Finance/
+../../CLINICALLY MEDICAL WASTE BUSINESS PROFILE/
+../../New folder/
+../../OpenCode Desktop Installer.exe
+../../PHQ/
+../../SGAGA/
+../../WarpSetup.exe
+../../borderless.finance---financial-modeling-suite.zip
+../../food delivery app/
+../../km-hygiene-&-waste-management/
+../../my-app.zip
+../
+../../p2p spares/
+../../punter-hq-strategy (1).png
+../../punter-hq-strategy (2).png
+../../punter-hq-strategy (3).png
+../../punter-hq-strategy.png
+../../qcto modules/
+../../studybuddyAI/
+../../tkz steels/
+../../un res data/
+../../vidz/
+../../../kiloHearts/
+../../../lefa s.pdf
+../../../lefa/
+../../../licensevalidation.txt
+../../../skuta pix/
+../../../thulaniCopy.pdf
+../../../welder/
+../../../../Downloads/
+../../../../Favorites/
+../../../../IMG-20240314-WA0021.xcf
+../../../../IntelGraphicsProfiles/
+../../../../LEBO.jpg
+../../../../Links/
+../../../../Local Settings/
+../../../../Music/
+../../../../My Documents/
+../../../../NTUSER.DAT
+../../../../NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TM.blf
+../../../../NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TMContainer00000000000000000001.regtrans-ms
+../../../../NTUSER.DAT{e8f2485c-0a8a-11ee-8d64-a0a8cde2a446}.TMContainer00000000000000000002.regtrans-ms
+../../../../OneDrive/
+../../../../Pictures/
+../../../../Recent/
+../../../../Saved Games/
+../../../../Searches/
+../../../../SendTo/
+../../../../Start Menu/
+../../../../ToneEmpire/
+../../../../Videos/
+../../../../apps
+../../../../bitmap.png
+../../../../devid
+../../../../drawing.svg
+../../../../grey.png
+../../../../grey.xcf
+../../../../ntuser.dat.LOG1
+../../../../ntuser.dat.LOG2
+../../../../ntuser.ini
+../../../../package-lock.json
+../../../../package.json
+../../../../webapp/
+NUL

@@ -1,0 +1,42 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\solea\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\solea\Documents\gemini cli\my-app\my-app\package-lock.json
+
+ ⚠ Port 3000 is in use by process 21220, using available port 3003 instead.
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.0.24:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 10.4s
+ ○ Compiling /strategy ...
+ ✓ Compiled /strategy in 30.9s (401 modules)
+ ✓ Compiled in 6.5s (402 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1722ms (909 modules)
+Button component received onClick prop.
+Button component received onClick prop.
+ HEAD /strategy 404 in 4244ms
+ ✓ Compiled in 4.1s (909 modules)
+ ✓ Compiled in 3.1s (923 modules)
+ ✓ Compiled in 1601ms (402 modules)
+ ✓ Compiled in 4.2s (402 modules)
+ ✓ Compiled in 2.5s (402 modules)
+ ✓ Compiled in 971ms (402 modules)
+ ✓ Compiled in 1582ms (400 modules)
+ ✓ Compiled in 1570ms (400 modules)
+ ✓ Compiled in 1222ms (400 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\0.pack.gz_' -> 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\0.pack.gz'
+ ✓ Compiled in 1793ms (400 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\0.pack.gz_' -> 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\0.pack.gz'
+ ✓ Compiled in 1695ms (400 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\2.pack.gz_' -> 'C:\Users\solea\Documents\gemini cli\my-app\my-app\.next\cache\webpack\client-development\2.pack.gz'
+ ✓ Compiled in 1971ms (400 modules)
